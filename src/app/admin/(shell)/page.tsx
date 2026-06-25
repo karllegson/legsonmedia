@@ -10,7 +10,7 @@ export default function AdminDashboardPage() {
           <h3>Dashboard</h3>
           <p>
             Legson Media admin is ready. Content sections in the sidebar connect to Supabase
-            and local admin stores — use Posts, Service Areas, FAQs, and Pages to manage the site.
+            and local admin stores — use Posts, FAQs, Media, and Pages to manage the site.
           </p>
         </div>
         <Link href="/admin/analytics" className="admin-card admin-dashboard-card-link">

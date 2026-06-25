@@ -19,9 +19,6 @@ const pageActions: Record<string, PageAction[]> = {
     { href: "/admin/pages/new?mode=link", label: "Add Link" },
   ],
   "/admin/pages/default": [{ href: "/admin/pages/new", label: "Add Page" }],
-  "/admin/service-areas": [
-    { href: "/admin/service-areas/new", label: "Add New Service Area" },
-  ],
   "/admin/faqs": [{ href: "/admin/faqs/new", label: "Add New FAQ" }],
   "/admin/reviews": [{ href: "/admin/reviews/new", label: "Add New Review" }],
   "/admin/forms": [
@@ -34,26 +31,10 @@ const pageActions: Record<string, PageAction[]> = {
 };
 
 function resolvePageTitle(pathname: string): string {
-  if (pathname.startsWith("/admin/service-areas/") && pathname !== "/admin/service-areas/new") {
-    const segment = pathname.split("/").pop();
-
-    if (segment && segment !== "sorting" && segment !== "nested") {
-      return "Edit Service Area";
-    }
-  }
-
   return adminPageTitles[pathname] ?? "Administration";
 }
 
 function resolvePageAction(pathname: string): PageAction[] | undefined {
-  if (pathname.startsWith("/admin/service-areas/") && pathname !== "/admin/service-areas/new") {
-    const segment = pathname.split("/").pop();
-
-    if (segment && segment !== "sorting" && segment !== "nested") {
-      return [{ href: "/admin/service-areas/new", label: "Add New Service Area" }];
-    }
-  }
-
   return pageActions[pathname];
 }
 

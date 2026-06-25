@@ -147,4 +147,3 @@ export function buildBlogPermalinkUrl(
   return buildPermalinkUrl(siteDomain, slug, "/blog/");
 }
 
-export { buildServiceAreaPermalinkUrl } from "@/lib/site/serviceAreaUrls";

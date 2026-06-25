@@ -1,10 +1,10 @@
 import type { PostRecordDTO } from "@/lib/admin/posts.dto";
-import { homeImages } from "@/lib/site/images";
+import { SITE_LOGO } from "@/lib/site/seo";
 import type { SidebarPostItem } from "@/lib/site/serviceAreaSidebar";
 import { getServiceAreaSidebarReview } from "@/lib/site/serviceAreaSidebar";
 
 export const blogEstimateDescription =
-  "Tell us about your project and our team will follow up within one business day.";
+  "Tell us about your marketing goals and our team will follow up within one business day.";
 
 export const blogSidebarReview = (() => {
   const review = getServiceAreaSidebarReview();
@@ -17,9 +17,9 @@ export const blogSidebarReview = (() => {
 })();
 
 const FALLBACK_SIDEBAR_IMAGES = [
-  homeImages.residentialRoofFraming,
-  homeImages.customHomeFramingCrew,
-  homeImages.twoStoryHomeFramingExterior,
+  { src: SITE_LOGO.path, alt: SITE_LOGO.alt },
+  { src: SITE_LOGO.path, alt: SITE_LOGO.alt },
+  { src: SITE_LOGO.path, alt: SITE_LOGO.alt },
 ] as const;
 
 export function mapPostsToSidebarItems(posts: PostRecordDTO[]): SidebarPostItem[] {

@@ -22,11 +22,6 @@ import {
   type PageQuickEditValues,
 } from "@/lib/admin/pageQuickEdit";
 import { useAdminToast } from "@/components/admin/toast/useAdminToast";
-import { ensureServiceAreasStoreReady } from "@/lib/admin/serviceAreasSync.client";
-import {
-  listAllServiceAreas,
-  SERVICE_AREAS_CHANGED_EVENT,
-} from "@/lib/admin/serviceAreasData";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   countPages,
@@ -286,28 +281,8 @@ export function PagesManager({ initialView = "all" }: { initialView?: PageListVi
   );
 
   useEffect(() => {
-    const refreshPages = () => {
-      const nextPages = getSitePages(listAllServiceAreas());
-      setPages(nextPages);
-      setExpandedIds((current) => {
-        const next = new Set(current);
-        next.add("service-areas");
-        for (const id of getDefaultExpandedPageIds(nextPages)) {
-          next.add(id);
-        }
-        return next;
-      });
-    };
-
-    void ensureServiceAreasStoreReady().then(refreshPages);
-
-    window.addEventListener(SERVICE_AREAS_CHANGED_EVENT, refreshPages);
-    window.addEventListener("storage", refreshPages);
-
-    return () => {
-      window.removeEventListener(SERVICE_AREAS_CHANGED_EVENT, refreshPages);
-      window.removeEventListener("storage", refreshPages);
-    };
+    setPages(getSitePages());
+    setExpandedIds(new Set(getDefaultExpandedPageIds(getSitePages())));
   }, []);
 
   const toggleExpand = (id: string) => {
@@ -410,10 +385,7 @@ export function PagesManager({ initialView = "all" }: { initialView?: PageListVi
   return (
     <div className="admin-pages-manager">
       <p className="admin-categories-status-message" role="status">
-        Read-only mirror of live routes. <strong>Service Areas</strong> is a page — city landing
-        pages (e.g. Stockton, CA) and their sub-pages nest underneath. Edit those in{" "}
-        <Link href="/admin/service-areas">Service Areas</Link>. Other pages still require a pages
-        CMS or code changes.
+        Read-only mirror of live routes. Pages still require a pages CMS or code changes.
       </p>
       <div className="admin-pages-toolbar-top">
         <label className="admin-pages-sync-menu">

@@ -16,13 +16,13 @@ export default function PagePlaceholder({ title, description }: PagePlaceholderP
         <h1 className="text-4xl font-extrabold text-brand-navy">{title}</h1>
         <p className="max-w-2xl text-gray-600">
           {description ??
-            "This page is under construction. In the meantime, request a free estimate and we'll get back to you within one business day."}
+            "This page is coming soon. In the meantime, book a free consultation and we'll get back to you within one business day."}
         </p>
         <Link
-          href="/#estimate"
+          href="/contact"
           className="mt-2 rounded-md bg-brand-red px-6 py-3 font-bold text-white transition-colors hover:bg-brand-red-dark"
         >
-          Request a Free Estimate
+          Book a Free Consultation
         </Link>
       </div>
     </section>

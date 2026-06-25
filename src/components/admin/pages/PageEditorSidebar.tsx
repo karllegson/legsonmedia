@@ -17,9 +17,6 @@ type PageEditorSidebarProps = {
 const PAGE_PARENT_OPTIONS = [
   { value: "", label: "(no parent)" },
   { value: "home", label: "Home" },
-  { value: "services", label: "Services" },
-  { value: "projects", label: "Projects" },
-  { value: "service-areas", label: "Service Areas" },
   { value: "blog", label: "Blog" },
   { value: "about", label: "About" },
   { value: "contact", label: "Contact" },

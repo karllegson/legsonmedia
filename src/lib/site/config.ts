@@ -1,5 +1,3 @@
-import type { HomeImageKey } from "@/lib/site/images";
-
 export const business = {
   name: "Legson Media",
   legalName: "Legson Media",
@@ -90,38 +88,6 @@ export const marketingServices: MarketingService[] = [
   },
 ];
 
-/** Legacy shape for footer/service pages — maps to marketing offerings */
-export type SiteService = {
-  title: string;
-  slug: string;
-  href: string;
-  shortDescription: string;
-  icon: "hammer" | "building" | "layers" | "fence" | "clipboard";
-  image: HomeImageKey;
-};
-
-export const services: SiteService[] = marketingServices.map((s) => ({
-  title: s.title,
-  slug: s.slug,
-  href: s.href,
-  shortDescription: s.shortDescription,
-  icon: "clipboard" as const,
-  image: "residentialRoofFraming" as HomeImageKey,
-}));
-
-export type ServiceArea = {
-  city: string;
-  slug: string;
-  href: string;
-  blurb: string;
-  region: "Central Valley" | "Bay Area" | "Southern California" | "Eastern Sierra";
-};
-
-export const serviceAreas: ServiceArea[] = [];
-
-export const featuredHomeServiceAreas: ServiceArea[] = [];
-export const featuredFooterServiceAreas: ServiceArea[] = [];
-
 export type TeamMemberProfile = {
   experience?: string;
   jobsDone?: string;
@@ -143,8 +109,8 @@ export const teamMembers: TeamMember[] = [];
 
 export const utilityNavLinks = [
   { label: "Services", href: "/#services" },
-  { label: "Work", href: "/projects" },
   { label: "Blog", href: "/blog" },
+  { label: "Contact", href: "/contact" },
 ] as const;
 
 export const serviceMenuGroups = [
@@ -174,7 +140,7 @@ export const serviceMenuGroups = [
     href: "/contact",
     links: [
       { label: "Free Consultation", href: "/contact" },
-      { label: "View Our Work", href: "/projects" },
+      { label: "About Us", href: "/about" },
       { label: "Read the Blog", href: "/blog" },
     ],
   },
@@ -184,7 +150,7 @@ export const whyUsNavLinks = [
   { label: "Why Legson Media", href: "/#why-us" },
   { label: "Our SEO Edge", href: "/#services" },
   { label: "Real Estate Media", href: "/#real-estate" },
-  { label: "Client Results", href: "/projects" },
+  { label: "Get Started", href: "/contact" },
 ] as const;
 
 export const aboutNavLinks = [

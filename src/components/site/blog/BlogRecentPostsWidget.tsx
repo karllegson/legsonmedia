@@ -3,9 +3,9 @@ import { ChevronRight } from "lucide-react";
 import type { PostRecordDTO } from "@/lib/admin/posts.dto";
 
 const PLACEHOLDER_POSTS = [
-  "Rough Framing Tips for Bay Area New Construction",
-  "What to Expect During a Custom Home Framing Project",
-  "How Production Builders Keep Framing Schedules on Track",
+  "Local SEO Basics for Service Businesses",
+  "What Makes a Website Actually Convert Visitors",
+  "Real Estate Media That Helps Listings Stand Out",
 ] as const;
 
 type BlogRecentPostsWidgetProps = {

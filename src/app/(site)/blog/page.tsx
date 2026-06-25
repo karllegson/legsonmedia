@@ -14,7 +14,7 @@ import { buildPageMetadata } from "@/lib/site/seo";
 export const metadata: Metadata = buildPageMetadata({
   title: "Blog",
   description:
-    "Framing, siding, remodeling, and construction tips for homeowners and builders across the Bay Area and Northern California from Legson Media.",
+    "Marketing, SEO, and media production insights from Legson Media — strategies to help your business rank, create, and grow.",
   path: "/blog",
 });
 

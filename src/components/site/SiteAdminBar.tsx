@@ -2,17 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { logout } from "@/app/admin/actions";
 import { siteConfig } from "@/lib/admin/config";
-import {
-  getFrontendAdminBarItems,
-  type FrontendAdminBarItem,
-} from "@/lib/admin/frontendAdminBar";
-import {
-  SERVICE_AREAS_CHANGED_EVENT,
-} from "@/lib/admin/serviceAreasData";
-import { resolveServiceAreaAdminIdFromPath } from "@/lib/site/serviceAreaUrls";
+import { getFrontendAdminBarItems } from "@/lib/admin/frontendAdminBar";
 
 type SiteAdminBarProps = {
   displayName: string;
@@ -31,50 +24,13 @@ function getInitials(displayName: string, email?: string | null) {
   return source.slice(0, 2).toUpperCase();
 }
 
-function resolveItemHref(
-  item: FrontendAdminBarItem,
-  pathname: string,
-  serviceAreaAdminId: string | null,
-): string {
-  if (!item.resolveServiceAreaId) {
-    return item.href;
-  }
-
-  if (serviceAreaAdminId) {
-    return `/admin/service-areas/${serviceAreaAdminId}`;
-  }
-
-  return item.href;
-}
-
 export function SiteAdminBar({
   displayName,
   email,
   authBypass = false,
 }: SiteAdminBarProps) {
   const pathname = usePathname();
-  const [serviceAreaAdminId, setServiceAreaAdminId] = useState<string | null>(null);
-
-  const baseItems = useMemo(() => getFrontendAdminBarItems(pathname), [pathname]);
-
-  useEffect(() => {
-    const syncServiceAreaId = () => {
-      setServiceAreaAdminId(resolveServiceAreaAdminIdFromPath(pathname));
-    };
-
-    syncServiceAreaId();
-    window.addEventListener(SERVICE_AREAS_CHANGED_EVENT, syncServiceAreaId);
-
-    return () => {
-      window.removeEventListener(SERVICE_AREAS_CHANGED_EVENT, syncServiceAreaId);
-    };
-  }, [pathname]);
-
-  const items = baseItems.map((item) => ({
-    ...item,
-    href: resolveItemHref(item, pathname, serviceAreaAdminId),
-  }));
-
+  const items = useMemo(() => getFrontendAdminBarItems(pathname), [pathname]);
   const initials = getInitials(displayName, email);
 
   return (

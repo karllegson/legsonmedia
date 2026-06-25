@@ -1,4 +1,4 @@
-import { homeImages } from "@/lib/site/images";
+import { SITE_LOGO } from "@/lib/site/seo";
 
 export type SidebarPostItem = {
   id: string;
@@ -18,24 +18,24 @@ export type SidebarReviewItem = {
 const SIDEBAR_POSTS: SidebarPostItem[] = [
   {
     id: "post-1",
-    title: "Rough Framing Tips for Bay Area New Construction",
+    title: "Local SEO Basics for Service Businesses",
     href: "/blog",
-    imageSrc: homeImages.residentialRoofFraming.src,
-    imageAlt: homeImages.residentialRoofFraming.alt,
+    imageSrc: SITE_LOGO.path,
+    imageAlt: SITE_LOGO.alt,
   },
   {
     id: "post-2",
-    title: "What to Expect During a Custom Home Framing Project",
+    title: "What Makes a Website Actually Convert Visitors",
     href: "/blog",
-    imageSrc: homeImages.customHomeFramingCrew.src,
-    imageAlt: homeImages.customHomeFramingCrew.alt,
+    imageSrc: SITE_LOGO.path,
+    imageAlt: SITE_LOGO.alt,
   },
   {
     id: "post-3",
-    title: "How Production Builders Keep Framing Schedules on Track",
+    title: "Real Estate Media That Helps Listings Stand Out",
     href: "/blog",
-    imageSrc: homeImages.twoStoryHomeFramingExterior.src,
-    imageAlt: homeImages.twoStoryHomeFramingExterior.alt,
+    imageSrc: SITE_LOGO.path,
+    imageAlt: SITE_LOGO.alt,
   },
 ];
 
@@ -43,8 +43,8 @@ const SIDEBAR_REVIEW: SidebarReviewItem = {
   reviewerName: "Maureen L.",
   rating: 5,
   excerpt:
-    "Legson Media handled our framing project with clear communication and dependable scheduling. The crew was professional from start to finish.",
-  href: "/#reviews",
+    "Legson Media rebuilt our site and improved our local rankings within months. Clear communication and real results.",
+  href: "/contact",
 };
 
 export function getServiceAreaSidebarPosts(): SidebarPostItem[] {

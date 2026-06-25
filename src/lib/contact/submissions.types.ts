@@ -24,11 +24,13 @@ export type ContactSubmission = {
 };
 
 export const CONTACT_FORM_SERVICE_LABELS: Record<string, string> = {
-  "rough-framing": "Rough Framing",
-  remodeling: "Remodeling",
-  siding: "Siding",
-  decks: "Decks & Porches",
-  other: "Other",
+  website: "Website Creation",
+  seo: "SEO & Rankings",
+  "photo-video": "Photo & Video",
+  "real-estate": "Real Estate Media",
+  "social-media": "Social Media Management",
+  content: "Content Creation",
+  other: "Something Else",
 };
 
 export function formatContactService(value: string): string {

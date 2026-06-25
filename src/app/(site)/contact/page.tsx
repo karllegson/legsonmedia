@@ -7,7 +7,7 @@ import { buildPageMetadata } from "@/lib/site/seo";
 export const metadata: Metadata = buildPageMetadata({
   title: "Contact Us",
   description:
-    "Contact Legson Media for a free framing, remodeling, siding, or deck estimate. Serving the Bay Area, Central Valley, and Southern California. License #000000.",
+    "Contact Legson Media for a free marketing consultation — websites, SEO, photo & video, social media, and content creation.",
   path: "/contact",
 });
 
@@ -20,11 +20,11 @@ export default function ContactPage() {
             Contact Us
           </p>
           <h1 className="mt-3 max-w-3xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
-            Request a Free Estimate or Ask a Question
+            Book a Free Consultation
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/85">
-            Tell us about your framing, remodeling, siding, or deck project. We respond within one
-            business day. {business.license}.
+            Tell us about your marketing goals — more leads, better rankings, a new website, or
+            listing media. We respond within one business day.
           </p>
         </div>
       </section>

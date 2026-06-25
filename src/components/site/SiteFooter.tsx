@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Mail, Phone } from "lucide-react";
 import SiteLogo from "@/components/site/SiteLogo";
 import { business, marketingServices } from "@/lib/site/config";
-import { framingFirstTagline } from "@/lib/site/messaging";
+import { brandTagline } from "@/lib/site/messaging";
 
 export default function SiteFooter() {
   return (
@@ -14,7 +14,7 @@ export default function SiteFooter() {
           <SiteLogo variant="footer" linked={false} />
           <p className="mt-4 text-sm leading-relaxed text-white/70">{business.companyStory}</p>
           <p className="mt-3 text-xs font-semibold leading-relaxed text-brand-gold">
-            {framingFirstTagline}
+            {brandTagline}
           </p>
         </div>
 
@@ -37,11 +37,6 @@ export default function SiteFooter() {
             <li>
               <Link href="/about" className="text-white/80 hover:text-brand-gold">
                 About Us
-              </Link>
-            </li>
-            <li>
-              <Link href="/projects" className="text-white/80 hover:text-brand-gold">
-                Our Work
               </Link>
             </li>
             <li>

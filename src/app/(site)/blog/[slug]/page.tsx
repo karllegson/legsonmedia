@@ -39,7 +39,7 @@ export async function generateMetadata({
   const description =
     post.metaDescription?.trim() ||
     post.excerpt?.trim() ||
-    `${post.title} — construction and framing insights from Legson Media.`;
+    `${post.title} — marketing and SEO insights from Legson Media.`;
 
   return buildPageMetadata({
     title,

@@ -42,24 +42,24 @@ export function ServiceAreaSidebar({
   const estimateCopy =
     estimateDescription ??
     (city
-      ? `Planning a project in ${city}? Tell us about your framing, siding, or deck needs and our team will follow up within one business day.`
-      : "Planning a project? Tell us about your framing, siding, or deck needs and our team will follow up within one business day.");
+      ? `Growing your business in ${city}? Tell us about your website, SEO, or media needs and our team will follow up within one business day.`
+      : "Tell us about your marketing goals — websites, SEO, photo & video, or social — and our team will follow up within one business day.");
 
   return (
     <aside
       className="flex w-full flex-col gap-5 lg:sticky lg:top-28 lg:self-start"
-      aria-label="Service area sidebar"
+      aria-label="Blog sidebar"
     >
       <div className="overflow-hidden rounded-lg border border-solid border-gray-200 bg-white">
         <h2 className="bg-brand-red px-4 py-3 text-base font-bold text-white">
-          Request a Free Estimate
+          Book a Free Consultation
         </h2>
         <p className="px-4 pt-4 text-sm leading-relaxed text-gray-600">{estimateCopy}</p>
         <Link
-          href="/#estimate"
+          href="/contact"
           className="mx-4 mt-4 block rounded-md bg-brand-red px-4 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-brand-red-dark"
         >
-          Request a Free Estimate
+          Book a Free Consultation
         </Link>
         <a
           href={business.phoneHref}

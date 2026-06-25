@@ -12,7 +12,7 @@ export default function HeroVideo() {
       loop
       playsInline
       preload="metadata"
-      aria-label="Legson Media commercial video showing framing and construction work"
+      aria-label="Legson Media brand video"
     />
   );
 }

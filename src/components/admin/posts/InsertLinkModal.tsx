@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { serviceAreas } from "@/lib/site/config";
 import { buildLinkSnippet, type LinkInsertOptions } from "@/lib/admin/postEditor";
 
 export type InsertLinkModalProps = {
@@ -17,11 +16,12 @@ type ExistingContentItem = {
   url: string;
 };
 
-const existingContentItems: ExistingContentItem[] = serviceAreas.map((area) => ({
-  title: area.city,
-  type: "SERVICE AREA",
-  url: area.href,
-}));
+const existingContentItems: ExistingContentItem[] = [
+  { title: "Home", type: "PAGE", url: "/" },
+  { title: "About", type: "PAGE", url: "/about" },
+  { title: "Contact", type: "PAGE", url: "/contact" },
+  { title: "Blog", type: "PAGE", url: "/blog" },
+];
 
 export function InsertLinkModal({
   isOpen,

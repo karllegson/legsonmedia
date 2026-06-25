@@ -67,7 +67,6 @@ function isNavItemActive(item: AdminNavItem, currentPath: string) {
 function isSubNavItemActive(href: string, currentPath: string) {
   if (
     href === "/admin/posts" ||
-    href === "/admin/service-areas" ||
     href === "/admin/pages" ||
     href === "/admin/faqs" ||
     href === "/admin/reviews" ||

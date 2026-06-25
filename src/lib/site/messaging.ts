@@ -10,8 +10,11 @@ export const differentiationIntro =
 
 export const brandPillarsHeading = "Built to Rank. Designed to Convert.";
 
-export const framingFirstTagline =
+export const brandTagline =
   "SEO-powered marketing — websites, media, and content that actually perform.";
+
+/** @deprecated Use brandTagline */
+export const framingFirstTagline = brandTagline;
 
 export const heroIntro =
   "From custom websites and search rankings to photo, video, and social — Legson Media is your full-service marketing partner with the SEO expertise to get you found.";
