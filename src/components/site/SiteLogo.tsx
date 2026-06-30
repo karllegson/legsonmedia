@@ -54,11 +54,11 @@ export default function SiteLogo({ variant = "header", linked = true }: SiteLogo
       </span>
       <span className="flex flex-col leading-none">
         <span
-          className={`font-display font-extrabold tracking-tight text-white ${legson}`}
+          className={`font-display font-extrabold tracking-tight text-site-text-dark ${legson}`}
         >
           LEGSON
         </span>
-        <span className="mt-1 text-[0.6rem] font-semibold uppercase tracking-[0.38em] text-brand-gold">
+        <span className="mt-1 text-[0.6rem] font-semibold uppercase tracking-[0.38em] text-brand-gold-dark">
           Media
         </span>
       </span>

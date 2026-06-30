@@ -17,7 +17,7 @@ export default function SectionIntro({
 
   return (
     <div className="mx-auto max-w-3xl text-center">
-      <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand-gold sm:text-sm">
+      <p className={`inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] sm:text-sm ${onDark ? "text-brand-gold" : "text-brand-gold-dark"}`}>
         <span className="h-px w-5 bg-brand-gold/60" aria-hidden />
         {eyebrow}
         <span className="h-px w-5 bg-brand-gold/60" aria-hidden />

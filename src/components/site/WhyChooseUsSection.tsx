@@ -10,10 +10,10 @@ type WhyChooseUsSectionProps = {
 
 export default function WhyChooseUsSection({ items, lede }: WhyChooseUsSectionProps) {
   return (
-    <section id="why-us" className="scroll-mt-28 bg-gray-50 py-12 sm:py-24">
+    <section id="why-us" className="scroll-mt-28 bg-cream-deep py-12 sm:py-24">
       <div className="site-container">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-gold sm:text-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-gold-dark sm:text-sm">
             Why Choose Us
           </p>
           <h2 className="mt-2 text-xl font-bold leading-snug text-site-text-dark sm:mt-3 sm:text-3xl sm:leading-tight lg:text-4xl">
@@ -32,33 +32,31 @@ export default function WhyChooseUsSection({ items, lede }: WhyChooseUsSectionPr
             return (
               <article
                 key={title}
-                className={`flex flex-col rounded-lg border border-solid px-4 py-4 shadow-sm sm:rounded-xl sm:px-7 sm:py-7 ${
+                className={`flex flex-col rounded-2xl border border-solid px-4 py-4 sm:rounded-3xl sm:px-7 sm:py-7 ${
                   isFeatured
-                    ? "border-black/15 bg-white ring-1 ring-brand-gold/30 sm:col-span-2 lg:col-span-1"
-                    : "border-gray-200 bg-white"
+                    ? "border-brand-gold bg-brand-gold/15 sm:col-span-2 lg:col-span-1"
+                    : "border-black/10 bg-white"
                 }`}
               >
                 <div className="flex items-center gap-2 sm:gap-3">
                   <span
                     className={`font-mono text-[10px] font-bold tracking-[0.18em] sm:text-xs sm:tracking-[0.22em] ${
-                      isFeatured ? "text-brand-gold" : "text-black/50"
+                      isFeatured ? "text-brand-gold-dark" : "text-black/40"
                     }`}
                   >
                     {label}
                   </span>
-                  <span className="h-px flex-1 bg-gray-200" aria-hidden />
+                  <span className="h-px flex-1 bg-black/10" aria-hidden />
                 </div>
                 <h3
-                  className={`mt-2 font-bold leading-snug sm:mt-3 ${
-                    isFeatured
-                      ? "text-base text-brand-navy sm:text-lg"
-                      : "text-sm text-brand-navy sm:text-[17px]"
+                  className={`mt-2 font-bold leading-snug text-site-text-dark sm:mt-3 ${
+                    isFeatured ? "text-base sm:text-lg" : "text-sm sm:text-[17px]"
                   }`}
                 >
                   {title}
                 </h3>
                 <p
-                  className={`mt-1 leading-relaxed text-gray-600 sm:mt-2 ${
+                  className={`mt-1 leading-relaxed text-site-text sm:mt-2 ${
                     isFeatured ? "text-sm sm:text-[15px]" : "text-xs sm:text-[15px]"
                   }`}
                 >

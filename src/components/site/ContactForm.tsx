@@ -174,7 +174,7 @@ export default function ContactForm({
               name="phone"
               required
               autoComplete="tel"
-              placeholder="(209) 555-0100"
+              placeholder="1 (209) 345-6727"
               className="rounded-md border border-solid border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400"
             />
           </label>

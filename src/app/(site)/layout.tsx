@@ -57,17 +57,17 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       </Suspense>
 
       {/* Sticky mobile call-to-action bar */}
-      <div className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-2 border-t border-solid border-white/10 sm:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-2 border-t border-solid border-black/10 sm:hidden">
         <a
           href={business.phoneHref}
-          className="flex items-center justify-center gap-2 bg-black py-3.5 text-sm font-bold text-white"
+          className="flex items-center justify-center gap-2 bg-ink py-3.5 text-sm font-bold text-white"
         >
           <Phone size={16} aria-hidden className="text-brand-gold" />
           Call Now
         </a>
         <Link
           href="/contact"
-          className="flex items-center justify-center bg-brand-gold py-3.5 text-sm font-bold text-black"
+          className="flex items-center justify-center bg-brand-gold py-3.5 text-sm font-bold text-ink"
         >
           Free Consultation
         </Link>

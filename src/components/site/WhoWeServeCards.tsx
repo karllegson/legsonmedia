@@ -17,21 +17,21 @@ export default function WhoWeServeCards({ items }: { items: readonly AudienceCar
         return (
           <article
             key={title}
-            className="group relative flex flex-col overflow-hidden rounded-2xl border border-solid border-gray-200 bg-white p-7 transition-all hover:-translate-y-1 hover:border-brand-gold/50 hover:shadow-[0_20px_50px_-25px_rgba(0,0,0,0.4)]"
+            className="group relative flex flex-col overflow-hidden rounded-3xl border border-solid border-black/10 bg-white p-7 transition-all hover:-translate-y-1 hover:border-brand-gold hover:shadow-[0_20px_50px_-25px_rgba(0,0,0,0.25)]"
           >
             <span
               aria-hidden
-              className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-brand-gold/10 transition-transform duration-300 group-hover:scale-150"
+              className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-brand-gold/15 transition-transform duration-300 group-hover:scale-150"
             />
 
-            <span className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-black text-brand-gold transition-colors group-hover:bg-brand-gold group-hover:text-black">
+            <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-ink text-brand-gold transition-colors group-hover:bg-brand-gold group-hover:text-ink">
               <Icon className="size-6" strokeWidth={1.75} aria-hidden />
             </span>
 
             <h3 className="font-display relative mt-5 text-lg font-bold leading-snug text-site-text-dark">
               {title}
             </h3>
-            <p className="relative mt-2 text-sm leading-relaxed text-gray-500">{body}</p>
+            <p className="relative mt-2 text-sm leading-relaxed text-site-text">{body}</p>
           </article>
         );
       })}

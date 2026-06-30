@@ -146,3 +146,18 @@ export const whyChooseUs = [
     body: "Clear reporting on rankings, traffic, and leads. You'll always know what's working.",
   },
 ] as const;
+
+export const testimonials = [
+  {
+    quote: "Their SEO work helped us grow the business as a whole",
+    body: "Legson Media played a huge role in our growth. When I came to them I had a handful of leads a month — now my calendar stays full and our site ranks on page one for the terms that matter.",
+    author: "Philip Lane",
+    role: "Business Owner",
+  },
+  {
+    quote: "The Legson team is fast, savvy, and ahead of the curve",
+    body: "From the new website to the content strategy, everything was handled with care. They feel like an extension of our team and consistently deliver results that move the needle.",
+    author: "Kristin Watson",
+    role: "General Manager",
+  },
+] as const;

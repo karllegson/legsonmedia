@@ -7,8 +7,8 @@ export const business = {
   heroHeadline: "We Build Brands That Get Found — and Get Chosen.",
   companyStory:
     "Legson Media is a full-service marketing agency with a deep SEO background. We design websites that convert, create photo and video that sells, and build content strategies that rank — so your business shows up when it matters most.",
-  phone: "(209) 555-0100",
-  phoneHref: "tel:+12095550100",
+  phone: "1 (209) 345-6727",
+  phoneHref: "tel:+12093456727",
   email: "hello@legsonmedia.com",
   foundedYear: 2020,
   address: {
