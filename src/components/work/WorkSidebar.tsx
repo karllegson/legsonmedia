@@ -95,6 +95,7 @@ export function WorkSidebar({
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={false}
                     className={`wk-nav-link${active ? " is-active" : ""}`}
                     aria-current={active ? "page" : undefined}
                   >

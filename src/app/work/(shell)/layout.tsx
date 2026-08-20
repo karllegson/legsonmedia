@@ -8,7 +8,7 @@ import {
 } from "@/lib/admin/auth";
 import { getWorkSession } from "@/lib/work/auth.server";
 import { getWorkNavForRole } from "@/lib/work/config";
-import { listTasksForUser } from "@/lib/work/tasks.server";
+import { countOpenTasksForUser } from "@/lib/work/tasks.server";
 import { getOpenTimeEntry } from "@/lib/work/time.server";
 
 export default async function WorkShellLayout({
@@ -33,14 +33,12 @@ export default async function WorkShellLayout({
     isActive: true,
   };
 
-  const [openEntry, tasks] = session
+  const [openEntry, openTaskCount] = session
     ? await Promise.all([
         getOpenTimeEntry(session.userId),
-        listTasksForUser(session.userId),
+        countOpenTasksForUser(session.userId),
       ])
-    : [null, []];
-
-  const openTaskCount = tasks.filter((task) => task.status !== "done").length;
+    : [null, 0];
 
   return (
     <div className="wk-shell">

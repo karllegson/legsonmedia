@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { isWorkDevBypass } from "./auth.server";
@@ -46,7 +47,7 @@ async function getDb() {
   return await createClient();
 }
 
-export async function listServiceCategories(): Promise<ServiceCategory[]> {
+export const listServiceCategories = cache(async (): Promise<ServiceCategory[]> => {
   const db = await getDb();
   if (!db) {
     return [];
@@ -58,9 +59,9 @@ export async function listServiceCategories(): Promise<ServiceCategory[]> {
     .order("sort_order");
 
   return (data ?? []).map(mapServiceCategory);
-}
+});
 
-export async function listClients(): Promise<Client[]> {
+export const listClients = cache(async (): Promise<Client[]> => {
   const db = await getDb();
   if (!db) {
     return [];
@@ -72,7 +73,7 @@ export async function listClients(): Promise<Client[]> {
     .order("name");
 
   return (data ?? []).map(mapClient);
-}
+});
 
 export async function listActiveClients(): Promise<Client[]> {
   const clients = await listClients();
@@ -89,7 +90,7 @@ export async function getClientById(id: string): Promise<Client | null> {
   return data ? mapClient(data) : null;
 }
 
-export async function listClientsWithRetainers(): Promise<ClientWithRetainer[]> {
+export const listClientsWithRetainers = cache(async (): Promise<ClientWithRetainer[]> => {
   const db = await getDb();
   if (!db) {
     return [];
@@ -110,7 +111,7 @@ export async function listClientsWithRetainers(): Promise<ClientWithRetainer[]> 
     ...mapClient(row),
     retainer: retainerByClient.get(row.id as string) ?? null,
   }));
-}
+});
 
 export async function getCurrentRetainer(
   clientId: string,

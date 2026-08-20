@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { isWorkDevBypass } from "./auth.server";
@@ -46,7 +47,7 @@ async function getDb() {
   return await createClient();
 }
 
-export async function listTeamMembers(): Promise<TeamMember[]> {
+export const listTeamMembers = cache(async (): Promise<TeamMember[]> => {
   const db = await getDb();
   if (!db) {
     return [];
@@ -65,7 +66,7 @@ export async function listTeamMembers(): Promise<TeamMember[]> {
     role: row.role as TeamMember["role"],
     isActive: row.is_active as boolean,
   }));
-}
+});
 
 export async function listTeamMembersWithEmail(): Promise<TeamMember[]> {
   const db = createAdminClient();

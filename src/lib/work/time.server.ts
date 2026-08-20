@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { isWorkDevBypass } from "./auth.server";
@@ -25,9 +26,9 @@ async function getDb() {
   return await createClient();
 }
 
-export async function getOpenTimeEntry(
+export const getOpenTimeEntry = cache(async (
   userId: string,
-): Promise<ActiveClockEntry | null> {
+): Promise<ActiveClockEntry | null> => {
   const db = await getDb();
   if (!db) {
     return null;
@@ -59,7 +60,7 @@ export async function getOpenTimeEntry(
     clientName: clientName ?? "Unknown client",
     taskTitle: taskTitle ?? null,
   };
-}
+});
 
 export async function clockIn(input: {
   userId: string;

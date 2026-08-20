@@ -27,18 +27,20 @@ export default async function WorkPlanningPage({ searchParams }: PlanningPagePro
   }
 
   const params = await searchParams;
-  const clients = await listClientsWithRetainers();
-  const activeClients = clients.filter((c) => c.isActive);
-  const selectedClientId = params.client ?? activeClients[0]?.id ?? "";
   const weekStart = params.week ?? getMondayOfWeek();
 
-  const [serviceCategories, teamMembers, plan] = await Promise.all([
+  const [clients, serviceCategories, teamMembers] = await Promise.all([
+    listClientsWithRetainers(),
     listServiceCategories(),
     listTeamMembers(),
-    selectedClientId
-      ? getOrCreateWeeklyPlan(selectedClientId, weekStart)
-      : Promise.resolve(null),
   ]);
+
+  const activeClients = clients.filter((c) => c.isActive);
+  const selectedClientId = params.client ?? activeClients[0]?.id ?? "";
+
+  const plan = selectedClientId
+    ? await getOrCreateWeeklyPlan(selectedClientId, weekStart)
+    : null;
 
   const [planLines, allocations] = plan
     ? await Promise.all([

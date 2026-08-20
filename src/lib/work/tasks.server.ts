@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { isWorkDevBypass } from "./auth.server";
@@ -29,7 +30,7 @@ async function getDb() {
   return await createClient();
 }
 
-export async function listTasksForUser(userId: string): Promise<WorkTask[]> {
+export const listTasksForUser = cache(async (userId: string): Promise<WorkTask[]> => {
   const db = await getDb();
   if (!db) {
     return [];
@@ -43,7 +44,23 @@ export async function listTasksForUser(userId: string): Promise<WorkTask[]> {
     .order("due_date", { ascending: true, nullsFirst: false });
 
   return (data ?? []).map(mapTask);
-}
+});
+
+/** Lightweight count for sidebar badge — avoids loading every task on navigation. */
+export const countOpenTasksForUser = cache(async (userId: string): Promise<number> => {
+  const db = await getDb();
+  if (!db) {
+    return 0;
+  }
+
+  const { count } = await db
+    .from("work_tasks")
+    .select("id", { count: "exact", head: true })
+    .eq("assigned_to", userId)
+    .neq("status", "done");
+
+  return count ?? 0;
+});
 
 export async function listAllTasks(): Promise<WorkTask[]> {
   const db = await getDb();

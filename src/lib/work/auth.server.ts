@@ -1,3 +1,4 @@
+import { cache } from "react";
 import {
   ADMIN_DEV_OPT_OUT_COOKIE,
   bypassAdminUser,
@@ -27,11 +28,11 @@ function bypassProfile(): WorkProfile {
   };
 }
 
-export async function getWorkSession(): Promise<{
+export const getWorkSession = cache(async (): Promise<{
   userId: string;
   email: string | null;
   profile: WorkProfile;
-} | null> {
+} | null> => {
   if (isAuthBypassEnabled()) {
     return {
       userId: bypassProfile().id,
@@ -71,7 +72,7 @@ export async function getWorkSession(): Promise<{
       isActive: profileRow?.is_active ?? true,
     },
   };
-}
+});
 
 export async function assertWorkAuth(): Promise<{
   userId: string;
