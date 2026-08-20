@@ -1,6 +1,6 @@
 "use server";
 
-import { isAuthBypassEnabled } from "@/lib/admin/auth";
+import { assertCmsAdminAuth as assertAdminAuth } from "@/lib/admin/cmsAuth.server";
 import { siteConfig } from "@/lib/admin/config";
 import type { SavePostPayload } from "@/lib/admin/posts.dto";
 import { toCategoryDTO, toPostDTO, toTagDTO } from "@/lib/admin/posts.dto";
@@ -33,27 +33,6 @@ import type {
   CreateTagInput,
   PostStoreStatus,
 } from "@/lib/admin/posts.types";
-import { createClient } from "@/lib/supabase/server";
-
-async function assertAdminAuth(): Promise<void> {
-  if (isAuthBypassEnabled()) {
-    return;
-  }
-
-  const supabase = await createClient();
-
-  if (!supabase) {
-    throw new Error("Unauthorized");
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
-}
 
 export async function fetchPostsForAdmin(): Promise<{
   items: ReturnType<typeof toPostListItems>;

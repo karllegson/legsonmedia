@@ -1,4 +1,5 @@
-import { login } from "@/app/admin/actions";
+import { enterDevBypass, login } from "@/app/admin/actions";
+import { isAuthBypassEnabled } from "@/lib/admin/auth";
 import { siteConfig } from "@/lib/admin/config";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -9,6 +10,7 @@ type LoginPageProps = {
 export default async function AdminLoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const configured = isSupabaseConfigured();
+  const bypass = isAuthBypassEnabled();
 
   return (
     <div className="admin-login-page">
@@ -33,33 +35,44 @@ export default async function AdminLoginPage({ searchParams }: LoginPageProps) {
 
         {params.error && <div className="admin-error">{params.error}</div>}
 
-        <form action={login}>
-          <div className="admin-form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="username"
-              required
-              disabled={!configured}
-            />
-          </div>
-          <div className="admin-form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              disabled={!configured}
-            />
-          </div>
-          <button type="submit" className="admin-btn-primary" disabled={!configured}>
-            Log In
-          </button>
-        </form>
+        {bypass ? (
+          <form action={enterDevBypass}>
+            <div className="admin-setup-notice">
+              Local dev bypass is on. No Supabase login needed.
+            </div>
+            <button type="submit" className="admin-btn-primary">
+              Continue as Dev Admin
+            </button>
+          </form>
+        ) : (
+          <form action={login}>
+            <div className="admin-form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="username"
+                required
+                disabled={!configured}
+              />
+            </div>
+            <div className="admin-form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                disabled={!configured}
+              />
+            </div>
+            <button type="submit" className="admin-btn-primary" disabled={!configured}>
+              Log In
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );

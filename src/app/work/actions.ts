@@ -10,19 +10,19 @@ async function restoreDevBypass() {
   cookieStore.delete(ADMIN_DEV_OPT_OUT_COOKIE);
 }
 
-export async function enterDevBypass() {
+export async function workEnterDevBypass() {
   if (!isAuthBypassEnabled()) {
-    redirect("/admin/login");
+    redirect("/work/login");
   }
 
   await restoreDevBypass();
-  redirect("/admin");
+  redirect("/work");
 }
 
-export async function login(formData: FormData) {
+export async function workLogin(formData: FormData) {
   if (isAuthBypassEnabled()) {
     await restoreDevBypass();
-    redirect("/admin");
+    redirect("/work");
   }
 
   const email = String(formData.get("email") ?? "").trim();
@@ -30,20 +30,20 @@ export async function login(formData: FormData) {
 
   const supabase = await createClient();
   if (!supabase) {
-    redirect("/admin/login?setup=1");
+    redirect("/work/login?setup=1");
   }
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    redirect(`/admin/login?error=${encodeURIComponent(error.message)}`);
+    redirect(`/work/login?error=${encodeURIComponent(error.message)}`);
   }
 
   await restoreDevBypass();
-  redirect("/admin");
+  redirect("/work");
 }
 
-export async function logout() {
+export async function workLogout() {
   if (isAuthBypassEnabled()) {
     const cookieStore = await cookies();
     cookieStore.set(ADMIN_DEV_OPT_OUT_COOKIE, "1", {
@@ -51,7 +51,7 @@ export async function logout() {
       maxAge: 60 * 60 * 24 * 30,
       sameSite: "lax",
     });
-    redirect("/admin/login?logged_out=1");
+    redirect("/work/login?logged_out=1");
   }
 
   const supabase = await createClient();
@@ -59,5 +59,5 @@ export async function logout() {
     await supabase.auth.signOut();
   }
 
-  redirect("/admin/login?logged_out=1");
+  redirect("/work/login?logged_out=1");
 }

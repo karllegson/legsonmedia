@@ -1,6 +1,6 @@
 "use server";
 
-import { isAuthBypassEnabled } from "@/lib/admin/auth";
+import { assertCmsAdminAuth as assertAdminAuth } from "@/lib/admin/cmsAuth.server";
 import type { CreateFaqCategoryInput, UpsertFaqInput } from "@/lib/admin/faqsData";
 import {
   createFaqCategory,
@@ -15,27 +15,6 @@ import {
   upsertFaq,
 } from "@/lib/admin/faqs.server";
 import { countFaqsInCategory } from "@/lib/admin/faqsData";
-import { createClient } from "@/lib/supabase/server";
-
-async function assertAdminAuth(): Promise<void> {
-  if (isAuthBypassEnabled()) {
-    return;
-  }
-
-  const supabase = await createClient();
-
-  if (!supabase) {
-    throw new Error("Unauthorized");
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
-}
 
 export async function fetchFaqCategoriesWithCountsAction(): Promise<{
   categories: Array<{

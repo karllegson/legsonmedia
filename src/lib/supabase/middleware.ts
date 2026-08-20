@@ -7,9 +7,37 @@ import {
 } from "@/lib/admin/auth";
 import { getSupabaseEnv, isSupabaseConfigured } from "./env";
 
+type RouteArea = "admin" | "work";
+
+function getRouteArea(pathname: string): RouteArea | null {
+  if (pathname.startsWith("/admin")) {
+    return "admin";
+  }
+  if (pathname.startsWith("/work")) {
+    return "work";
+  }
+  return null;
+}
+
+function getLoginPath(area: RouteArea): string {
+  return area === "admin" ? "/admin/login" : "/work/login";
+}
+
+function getHomePath(area: RouteArea): string {
+  return area === "admin" ? "/admin" : "/work";
+}
+
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isLoginRoute = pathname === "/admin/login";
+  const area = getRouteArea(pathname);
+
+  if (!area) {
+    return NextResponse.next();
+  }
+
+  const loginPath = getLoginPath(area);
+  const homePath = getHomePath(area);
+  const isLoginRoute = pathname === loginPath;
 
   if (isAuthBypassEnabled()) {
     const optedOut = hasDevBypassOptOut(
@@ -19,7 +47,7 @@ export async function updateSession(request: NextRequest) {
     if (optedOut) {
       if (!isLoginRoute) {
         const url = request.nextUrl.clone();
-        url.pathname = "/admin/login";
+        url.pathname = loginPath;
         return NextResponse.redirect(url);
       }
 
@@ -28,7 +56,7 @@ export async function updateSession(request: NextRequest) {
 
     if (isLoginRoute) {
       const url = request.nextUrl.clone();
-      url.pathname = "/admin";
+      url.pathname = homePath;
       return NextResponse.redirect(url);
     }
 
@@ -41,7 +69,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     const url = request.nextUrl.clone();
-    url.pathname = "/admin/login";
+    url.pathname = loginPath;
     url.searchParams.set("setup", "1");
     return NextResponse.redirect(url);
   }
@@ -72,14 +100,46 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && !isLoginRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = "/admin/login";
+    url.pathname = loginPath;
     return NextResponse.redirect(url);
   }
 
   if (user && isLoginRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = "/admin";
+    url.pathname = homePath;
     return NextResponse.redirect(url);
+  }
+
+  if (user && area === "admin" && !isLoginRoute) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role, is_active")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const role = profile?.role ?? "specialist";
+    const isActive = profile?.is_active ?? true;
+
+    if (!isActive || role !== "owner") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/work";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  if (user && area === "work" && !isLoginRoute) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_active")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile && profile.is_active === false) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/work/login";
+      url.searchParams.set("error", "Account inactive");
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

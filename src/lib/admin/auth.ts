@@ -1,9 +1,11 @@
-/** Local dev only — set BYPASS_ADMIN_AUTH=true in .env.local */
+/** Local `next dev` only. Set BYPASS_ADMIN_AUTH=false to test real login locally. */
 export function isAuthBypassEnabled() {
-  return (
-    process.env.BYPASS_ADMIN_AUTH === "true" &&
-    process.env.NODE_ENV === "development"
-  );
+  if (process.env.NODE_ENV !== "development") {
+    return false;
+  }
+
+  const flag = process.env.BYPASS_ADMIN_AUTH?.trim().toLowerCase();
+  return flag !== "false" && flag !== "0";
 }
 
 export const ADMIN_DEV_OPT_OUT_COOKIE = "admin_dev_opt_out";
