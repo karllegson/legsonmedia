@@ -5,12 +5,19 @@ import {
   listMessageThreadsForUser,
 } from "@/lib/work/messages.server";
 
-export default async function WorkMessagesPage() {
+type WorkMessagesPageProps = {
+  searchParams: Promise<{ thread?: string }>;
+};
+
+export default async function WorkMessagesPage({
+  searchParams,
+}: WorkMessagesPageProps) {
   const session = await getWorkSession();
   if (!session) {
     return null;
   }
 
+  const query = await searchParams;
   const currentUserName =
     session.profile.displayName ||
     session.email?.split("@")[0] ||
@@ -35,6 +42,7 @@ export default async function WorkMessagesPage() {
       currentUserName={currentUserName}
       initialThreads={threads}
       teammates={teammates}
+      initialThreadId={query.thread}
     />
   );
 }

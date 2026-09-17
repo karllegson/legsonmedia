@@ -6,15 +6,36 @@ import {
   requireCmsAdmin,
   requireWorkManager,
 } from "@/lib/work/auth.server";
-import { upsertClient, upsertRetainer } from "@/lib/work/clients.server";
-import { isManagerRole, WORK_ROLES, canManageWorkRoles } from "@/lib/work/roles";
+import {
+  getCurrentRetainer,
+  upsertClient,
+  upsertRetainer,
+} from "@/lib/work/clients.server";
+import { isManagerRole, isOwnerRole, WORK_ROLES, canManageWorkRoles } from "@/lib/work/roles";
 import {
   bulkCreateTasksFromPlan,
   createTask,
   deleteTask,
   updateTaskStatus,
 } from "@/lib/work/tasks.server";
-import { clockIn, clockOut } from "@/lib/work/time.server";
+import {
+  addManualTimeEntry,
+  clockIn,
+  clockOut,
+  deleteTimeEntry,
+  pauseClock,
+  resumeClock,
+  updateTimeEntry,
+} from "@/lib/work/time.server";
+import {
+  createTimeEditRequest,
+  getTimeEditRequest,
+  resolveTimeEditRequest,
+} from "@/lib/work/timeEditRequests.server";
+import {
+  listWorkNotifications,
+  markWorkNotificationsRead,
+} from "@/lib/work/notifications.server";
 import {
   deleteAllocation,
   deletePlanLine,
@@ -33,6 +54,13 @@ import {
   sendThreadMessage,
 } from "@/lib/work/messages.server";
 import type { TaskPriority, TaskStatus } from "@/lib/work/types";
+
+function revalidateTimePaths() {
+  revalidatePath("/work");
+  revalidatePath("/work/clock");
+  revalidatePath("/work/reports");
+  revalidatePath("/work/clients");
+}
 
 export async function clockInAction(formData: FormData) {
   const session = await assertWorkAuth();
@@ -76,6 +104,216 @@ export async function clockOutAction(formData: FormData) {
     return {
       ok: false,
       error: err instanceof Error ? err.message : "Clock out failed",
+    };
+  }
+}
+
+export async function pauseClockAction() {
+  const session = await assertWorkAuth();
+  try {
+    await pauseClock(session.userId);
+    revalidatePath("/work");
+    revalidatePath("/work/clock");
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Could not pause",
+    };
+  }
+}
+
+export async function resumeClockAction() {
+  const session = await assertWorkAuth();
+  try {
+    await resumeClock(session.userId);
+    revalidatePath("/work");
+    revalidatePath("/work/clock");
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Could not resume",
+    };
+  }
+}
+
+export async function addManualTimeAction(formData: FormData) {
+  await assertWorkAuth();
+
+  const userId = String(formData.get("userId") ?? "");
+  const clientId = String(formData.get("clientId") ?? "");
+  const weekStart = String(formData.get("weekStart") ?? "");
+  const hours = Number(formData.get("hours") ?? 0);
+  const minutes = Number(formData.get("minutes") ?? 0);
+  const notes = String(formData.get("notes") ?? "");
+  const taskId = String(formData.get("taskId") ?? "") || undefined;
+
+  try {
+    await addManualTimeEntry({
+      userId,
+      clientId,
+      weekStart,
+      hours,
+      minutes,
+      notes,
+      taskId,
+    });
+    revalidateTimePaths();
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Could not log time",
+    };
+  }
+}
+
+export async function updateTimeEntryAction(formData: FormData) {
+  const session = await requireCmsAdmin();
+
+  const entryId = String(formData.get("entryId") ?? "");
+  const hours = Number(formData.get("hours") ?? 0);
+  const minutes = Number(formData.get("minutes") ?? 0);
+  const notes = String(formData.get("notes") ?? "");
+
+  if (!entryId) {
+    return { ok: false, error: "Missing entry" };
+  }
+
+  try {
+    await updateTimeEntry({ entryId, hours, minutes, notes });
+    revalidateTimePaths();
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Could not update entry",
+    };
+  }
+}
+
+export async function deleteTimeEntryAction(formData: FormData) {
+  await requireCmsAdmin();
+  const entryId = String(formData.get("entryId") ?? "");
+  if (!entryId) {
+    return { ok: false, error: "Missing entry" };
+  }
+
+  try {
+    await deleteTimeEntry(entryId);
+    revalidateTimePaths();
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Could not delete entry",
+    };
+  }
+}
+
+export async function requestTimeEditAction(formData: FormData) {
+  const session = await assertWorkAuth();
+  if (isOwnerRole(session.profile.role)) {
+    return {
+      ok: false,
+      error: "Owners can edit time directly — no request needed",
+    };
+  }
+
+  const entryId = String(formData.get("entryId") ?? "");
+  const hours = Number(formData.get("hours") ?? 0);
+  const minutes = Number(formData.get("minutes") ?? 0);
+  const notes = String(formData.get("notes") ?? "");
+  const reason = String(formData.get("reason") ?? "");
+
+  try {
+    await createTimeEditRequest({
+      entryId,
+      requesterId: session.userId,
+      proposedHours: hours,
+      proposedMinutes: minutes,
+      proposedNotes: notes,
+      reason,
+    });
+    revalidatePath("/work/clock");
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Could not submit request",
+    };
+  }
+}
+
+export async function resolveTimeEditRequestAction(formData: FormData) {
+  const session = await requireCmsAdmin();
+  const requestId = String(formData.get("requestId") ?? "");
+  const decision = String(formData.get("decision") ?? "");
+  const resolutionNote = String(formData.get("resolutionNote") ?? "");
+
+  if (!requestId || (decision !== "approved" && decision !== "denied")) {
+    return { ok: false, error: "Invalid decision" };
+  }
+
+  try {
+    const request = await getTimeEditRequest(requestId);
+    if (!request) {
+      return { ok: false, error: "Request not found" };
+    }
+
+    if (decision === "approved") {
+      await updateTimeEntry({
+        entryId: request.entryId,
+        hours: request.proposedHours,
+        minutes: request.proposedMinutes,
+        notes: request.proposedNotes,
+      });
+    }
+
+    await resolveTimeEditRequest({
+      requestId,
+      resolverId: session.userId,
+      status: decision,
+      resolutionNote,
+    });
+
+    revalidateTimePaths();
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Could not resolve request",
+    };
+  }
+}
+
+export async function listNotificationsAction() {
+  const session = await assertWorkAuth();
+  try {
+    const items = await listWorkNotifications({
+      userId: session.userId,
+      role: session.profile.role,
+    });
+    return { ok: true as const, items };
+  } catch (err) {
+    return {
+      ok: false as const,
+      error: err instanceof Error ? err.message : "Could not load notifications",
+      items: [],
+    };
+  }
+}
+
+export async function markNotificationsReadAction(ids: string[]) {
+  const session = await assertWorkAuth();
+  try {
+    await markWorkNotificationsRead({ userId: session.userId, ids });
+    return { ok: true as const };
+  } catch (err) {
+    return {
+      ok: false as const,
+      error: err instanceof Error ? err.message : "Could not update notifications",
     };
   }
 }
@@ -156,14 +394,15 @@ export async function deleteTaskAction(taskId: string) {
 }
 
 export async function saveClientAction(formData: FormData) {
-  await requireWorkManager();
+  const session = await requireWorkManager();
+  const isOwner = isOwnerRole(session.profile.role);
 
   const id = String(formData.get("id") ?? "") || undefined;
   const name = String(formData.get("name") ?? "").trim();
   const slug = String(formData.get("slug") ?? "").trim();
   const notes = String(formData.get("notes") ?? "").trim();
   const hoursPerWeek = Number(formData.get("hoursPerWeek") || 0);
-  const hourlyRate = Number(formData.get("hourlyRate") || 0);
+  const submittedRate = Number(formData.get("hourlyRate") || 0);
 
   if (!name || !slug) {
     return { ok: false, error: "Name and slug are required" };
@@ -172,10 +411,15 @@ export async function saveClientAction(formData: FormData) {
   try {
     const client = await upsertClient({ id, name, slug, notes });
     if (hoursPerWeek > 0) {
+      const existing = await getCurrentRetainer(client.id);
+      const hourlyRate = isOwner
+        ? submittedRate || existing?.hourlyRate || 0
+        : existing?.hourlyRate ?? 0;
+
       await upsertRetainer({
         clientId: client.id,
         hoursPerWeek,
-        hourlyRate: hourlyRate || 0,
+        hourlyRate,
       });
     }
     revalidatePath("/work/clients");

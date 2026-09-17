@@ -41,6 +41,7 @@ export async function getClientUtilizationReport(
 
     results.push({
       clientId: client.id,
+      clientSlug: client.slug,
       clientName: client.name,
       retainerHours,
       hourlyRate,
@@ -164,12 +165,29 @@ export async function getTimeEntriesExport(
   const { data } = await db
     .from("time_entries")
     .select(
-      "clock_in, clock_out, duration_minutes, notes, clients(name), profiles(display_name), work_tasks(title)",
+      "user_id, clock_in, clock_out, duration_minutes, notes, clients(name), work_tasks(title)",
     )
     .gte("clock_in", `${weekStart}T00:00:00.000Z`)
     .lt("clock_in", weekEnd.toISOString())
     .not("clock_out", "is", null)
     .order("clock_in");
+
+  const userIds = Array.from(
+    new Set((data ?? []).map((row) => row.user_id as string)),
+  );
+  const displayNameByUser = new Map<string, string | null>();
+  if (userIds.length > 0) {
+    const { data: profiles } = await db
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", userIds);
+    for (const profile of profiles ?? []) {
+      displayNameByUser.set(
+        profile.id as string,
+        (profile.display_name as string | null) ?? null,
+      );
+    }
+  }
 
   const header = [
     "Date",
@@ -182,17 +200,11 @@ export async function getTimeEntriesExport(
 
   const lines = (data ?? []).map((row) => {
     const clients = row.clients as { name: string } | { name: string }[] | null;
-    const profiles = row.profiles as
-      | { display_name: string | null }
-      | { display_name: string | null }[]
-      | null;
     const tasks = row.work_tasks as { title: string } | { title: string }[] | null;
     const clientName = Array.isArray(clients)
       ? clients[0]?.name
       : clients?.name;
-    const displayName = Array.isArray(profiles)
-      ? profiles[0]?.display_name
-      : profiles?.display_name;
+    const displayName = displayNameByUser.get(row.user_id as string);
     const taskTitle = Array.isArray(tasks) ? tasks[0]?.title : tasks?.title;
 
     return [

@@ -10,9 +10,14 @@ import {
   Download,
   TrendingUp,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { addWeeks, formatCurrency, formatHours } from "@/lib/work/roles";
-import type { ClientUtilization, SpecialistUtilization } from "@/lib/work/types";
+import { addWeeks, formatCurrency, formatHours, isOwnerRole } from "@/lib/work/roles";
+import type {
+  ClientUtilization,
+  SpecialistUtilization,
+  WorkRole,
+} from "@/lib/work/types";
 
 type ReportsViewProps = {
   weekStart: string;
@@ -20,6 +25,7 @@ type ReportsViewProps = {
   specialistReport: SpecialistUtilization[];
   billingCsv: string;
   timeCsv: string;
+  role: WorkRole;
 };
 
 function initials(name: string) {
@@ -55,8 +61,10 @@ export function ReportsView({
   specialistReport,
   billingCsv,
   timeCsv,
+  role,
 }: ReportsViewProps) {
   const router = useRouter();
+  const isOwner = isOwnerRole(role);
 
   const totalLogged = clientReport.reduce((sum, row) => sum + row.loggedHours, 0);
   const totalRetainer = clientReport.reduce(
@@ -127,14 +135,16 @@ export function ReportsView({
               <Download size={15} strokeWidth={2} aria-hidden />
               Time entries
             </button>
-            <button
-              type="button"
-              className="wk-btn wk-btn-primary"
-              onClick={() => downloadCsv(`billing-${weekStart}.csv`, billingCsv)}
-            >
-              <Download size={15} strokeWidth={2} aria-hidden />
-              Billing CSV
-            </button>
+            {isOwner ? (
+              <button
+                type="button"
+                className="wk-btn wk-btn-primary"
+                onClick={() => downloadCsv(`billing-${weekStart}.csv`, billingCsv)}
+              >
+                <Download size={15} strokeWidth={2} aria-hidden />
+                Billing CSV
+              </button>
+            ) : null}
           </div>
         </div>
       </section>
@@ -181,16 +191,18 @@ export function ReportsView({
           </div>
         </article>
 
-        <article className="wk-stat">
-          <div className="wk-stat-top">
-            <span className="wk-stat-label">Billable this week</span>
-            <span className="wk-stat-icon is-green">
-              <DollarSign size={16} strokeWidth={2} aria-hidden />
-            </span>
-          </div>
-          <p className="wk-stat-value">{formatCurrency(totalBillable)}</p>
-          <p className="wk-stat-foot">Logged hours &times; rate</p>
-        </article>
+        {isOwner ? (
+          <article className="wk-stat">
+            <div className="wk-stat-top">
+              <span className="wk-stat-label">Billable this week</span>
+              <span className="wk-stat-icon is-green">
+                <DollarSign size={16} strokeWidth={2} aria-hidden />
+              </span>
+            </div>
+            <p className="wk-stat-value">{formatCurrency(totalBillable)}</p>
+            <p className="wk-stat-foot">Logged hours &times; rate</p>
+          </article>
+        ) : null}
 
         <article className="wk-stat">
           <div className="wk-stat-top">
@@ -235,7 +247,9 @@ export function ReportsView({
                   <th className="wk-table-right">Logged</th>
                   <th className="wk-table-right">Remaining</th>
                   <th>Usage</th>
-                  <th className="wk-table-right">Billable</th>
+                  {isOwner ? (
+                    <th className="wk-table-right">Billable</th>
+                  ) : null}
                 </tr>
               </thead>
               <tbody>
@@ -247,7 +261,14 @@ export function ReportsView({
 
                   return (
                     <tr key={row.clientId}>
-                      <td className="wk-cell-title">{row.clientName}</td>
+                      <td className="wk-cell-title">
+                        <Link
+                          href={`/work/clients/${row.clientSlug}?week=${weekStart}`}
+                          className="wk-link"
+                        >
+                          {row.clientName}
+                        </Link>
+                      </td>
                       <td className="wk-table-right wk-table-num">
                         {formatHours(row.retainerHours)}
                       </td>
@@ -277,9 +298,11 @@ export function ReportsView({
                           <span className="wk-util-value">{usage}%</span>
                         </span>
                       </td>
-                      <td className="wk-table-right wk-cell-strong">
-                        {formatCurrency(row.billableAmount)}
-                      </td>
+                      {isOwner ? (
+                        <td className="wk-table-right wk-cell-strong">
+                          {formatCurrency(row.billableAmount)}
+                        </td>
+                      ) : null}
                     </tr>
                   );
                 })}

@@ -63,7 +63,7 @@ export const countOpenTasksForUser = cache(async (userId: string): Promise<numbe
 });
 
 export async function listAllTasks(): Promise<WorkTask[]> {
-  const db = await getDb();
+  const db = createAdminClient();
   if (!db) {
     return [];
   }

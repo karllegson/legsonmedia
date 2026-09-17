@@ -5,5 +5,5 @@ export type WorkNotification = {
   href?: string;
   createdAt: string;
   read: boolean;
-  kind: "task" | "time" | "team" | "system";
+  kind: "task" | "time" | "team" | "system" | "message";
 };

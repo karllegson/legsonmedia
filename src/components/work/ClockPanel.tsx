@@ -7,23 +7,30 @@ import {
   Check,
   Clock3,
   ListChecks,
+  Pause,
+  Play,
   Timer,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { clockInAction, clockOutAction } from "@/app/work/(shell)/actions";
+import {
+  clockInAction,
+  clockOutAction,
+  pauseClockAction,
+  resumeClockAction,
+} from "@/app/work/(shell)/actions";
 import { LiveTimer } from "@/components/work/LiveTimer";
 import { formatHours } from "@/lib/work/roles";
 import type {
-  ActiveClockEntry,
   Client,
   ServiceCategory,
   WorkTask,
 } from "@/lib/work/types";
+import type { ActiveClockSession } from "@/lib/work/time.server";
 
 type ClockPanelProps = {
-  openEntry: ActiveClockEntry | null;
+  openEntry: ActiveClockSession | null;
   clients: Client[];
   tasks: WorkTask[];
   serviceCategories: ServiceCategory[];
@@ -82,15 +89,29 @@ export function ClockPanel({
     });
   }
 
+  function handlePauseToggle() {
+    setError(null);
+    startTransition(async () => {
+      const result = openEntry?.isPaused
+        ? await resumeClockAction()
+        : await pauseClockAction();
+      if (!result.ok) {
+        setError(result.error ?? "Could not update pause");
+        return;
+      }
+      router.refresh();
+    });
+  }
+
   if (openEntry) {
     return (
       <div className="wk-stack">
         <section className="wk-hero">
           <div className="wk-hero-row">
             <div>
-              <span className="wk-live">
+              <span className={`wk-live${openEntry.isPaused ? " is-paused" : ""}`}>
                 <span className="wk-live-dot" aria-hidden />
-                Session running
+                {openEntry.isPaused ? "Paused" : "Session running"}
               </span>
               <h2 className="wk-hero-client">{openEntry.clientName}</h2>
               <p className="wk-hero-task">
@@ -111,14 +132,17 @@ export function ClockPanel({
             <div className="wk-hero-timer">
               <LiveTimer
                 startedAt={openEntry.clockIn}
+                pausedMs={openEntry.pausedMs}
+                isPaused={openEntry.isPaused}
                 className="wk-hero-timer-value"
               />
               <p className="wk-hero-timer-label">
-                Started{" "}
-                {new Date(openEntry.clockIn).toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
+                {openEntry.isPaused
+                  ? "Timer paused"
+                  : `Started ${new Date(openEntry.clockIn).toLocaleTimeString(
+                      "en-US",
+                      { hour: "numeric", minute: "2-digit" },
+                    )}`}
               </p>
             </div>
           </div>
@@ -129,7 +153,7 @@ export function ClockPanel({
             <div>
               <h2 className="wk-card-title">Wrap up this session</h2>
               <p className="wk-card-sub">
-                Add a quick note so the weekly report has context.
+                Pause for breaks, or clock out when you&apos;re done.
               </p>
             </div>
           </div>
@@ -157,6 +181,24 @@ export function ClockPanel({
             ) : null}
 
             <div className="wk-form-actions">
+              <button
+                type="button"
+                className="wk-btn wk-btn-ghost wk-btn-lg"
+                disabled={pending}
+                onClick={handlePauseToggle}
+              >
+                {openEntry.isPaused ? (
+                  <>
+                    <Play size={16} strokeWidth={2} aria-hidden />
+                    {pending ? "Resuming…" : "Resume"}
+                  </>
+                ) : (
+                  <>
+                    <Pause size={16} strokeWidth={2} aria-hidden />
+                    {pending ? "Pausing…" : "Pause"}
+                  </>
+                )}
+              </button>
               <button
                 type="button"
                 className="wk-btn wk-btn-danger wk-btn-lg"
@@ -231,7 +273,7 @@ export function ClockPanel({
             <li className="wk-row">
               <span className="wk-stat-icon is-accent">3</span>
               <span className="wk-muted">
-                Clock out with a note when you&apos;re done
+                Pause for breaks, then clock out when done
               </span>
             </li>
           </ul>

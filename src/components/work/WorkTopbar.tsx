@@ -12,7 +12,11 @@ type WorkTopbarProps = {
 
 export function WorkTopbar({ activeClientName }: WorkTopbarProps) {
   const pathname = usePathname();
-  const meta = workPageMeta[pathname] ?? { title: "Work", eyebrow: "Portal" };
+  const meta =
+    workPageMeta[pathname] ??
+    (pathname.startsWith("/work/clients/")
+      ? { title: "Client hours", eyebrow: "Weekly breakdown" }
+      : { title: "Work", eyebrow: "Portal" });
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     month: "short",

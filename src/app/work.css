@@ -666,6 +666,18 @@
   animation: wk-pulse 1.9s ease-in-out infinite;
 }
 
+.wk-live.is-paused {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(251, 191, 36, 0.36);
+  color: #fbbf24;
+}
+
+.wk-live.is-paused .wk-live-dot {
+  background: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.22);
+  animation: none;
+}
+
 @keyframes wk-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.55; transform: scale(0.86); }
@@ -1113,6 +1125,16 @@
   gap: 14px 16px;
 }
 
+.wk-inline-form {
+  padding: 14px;
+  border: 1px solid var(--wk-line);
+  border-radius: 12px;
+  background: var(--wk-line-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .wk-form-full {
   grid-column: 1 / -1;
 }
@@ -1485,6 +1507,16 @@
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.01em;
+}
+
+.wk-tile-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.wk-tile-title-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .wk-tile-live {

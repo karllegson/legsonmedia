@@ -20,7 +20,7 @@ import {
   minutesToHours,
 } from "@/lib/work/roles";
 import { listAllTasks, listTasksForUser } from "@/lib/work/tasks.server";
-import { getOpenTimeEntry, sumLoggedMinutesForUser } from "@/lib/work/time.server";
+import { getActiveClockSession, sumLoggedMinutesForUser } from "@/lib/work/time.server";
 
 const STATUS_LABEL = {
   todo: "To do",
@@ -48,7 +48,7 @@ export default async function WorkDashboardPage() {
     clients,
     serviceCategories,
   ] = await Promise.all([
-    getOpenTimeEntry(session.userId),
+    getActiveClockSession(session.userId),
     sumLoggedMinutesForUser(session.userId, weekStart),
     sumAllocatedHoursForUser(session.userId, weekStart),
     listTasksForUser(session.userId),
@@ -77,9 +77,9 @@ export default async function WorkDashboardPage() {
         <section className="wk-hero">
           <div className="wk-hero-row">
             <div>
-              <span className="wk-live">
+              <span className={`wk-live${openEntry.isPaused ? " is-paused" : ""}`}>
                 <span className="wk-live-dot" aria-hidden />
-                On the clock
+                {openEntry.isPaused ? "Paused" : "On the clock"}
               </span>
               <h2 className="wk-hero-client">{openEntry.clientName}</h2>
               <p className="wk-hero-task">
@@ -100,9 +100,13 @@ export default async function WorkDashboardPage() {
             <div className="wk-hero-timer">
               <LiveTimer
                 startedAt={openEntry.clockIn}
+                pausedMs={openEntry.pausedMs}
+                isPaused={openEntry.isPaused}
                 className="wk-hero-timer-value"
               />
-              <p className="wk-hero-timer-label">Elapsed</p>
+              <p className="wk-hero-timer-label">
+                {openEntry.isPaused ? "Timer paused" : "Elapsed"}
+              </p>
             </div>
           </div>
 

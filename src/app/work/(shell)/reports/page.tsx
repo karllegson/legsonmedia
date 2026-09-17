@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { ReportsView } from "@/components/work/ReportsView";
 import { getWorkSession, requireWorkManager } from "@/lib/work/auth.server";
-import { getMondayOfWeek } from "@/lib/work/roles";
+import { getMondayOfWeek, isOwnerRole } from "@/lib/work/roles";
 import {
   buildBillingCsv,
   getClientUtilizationReport,
@@ -27,14 +27,25 @@ export default async function WorkReportsPage({ searchParams }: ReportsPageProps
 
   const params = await searchParams;
   const weekStart = params.week ?? getMondayOfWeek();
+  const isOwner = isOwnerRole(session.profile.role);
 
-  const [clientReport, specialistReport, timeCsv] = await Promise.all([
+  const [clientReportRaw, specialistReport, timeCsv] = await Promise.all([
     getClientUtilizationReport(weekStart),
     getSpecialistUtilizationReport(weekStart),
     getTimeEntriesExport(weekStart),
   ]);
 
-  const billingCsv = buildBillingCsv(clientReport, weekStart);
+  const clientReport = isOwner
+    ? clientReportRaw
+    : clientReportRaw.map((row) => ({
+        ...row,
+        hourlyRate: 0,
+        billableAmount: 0,
+      }));
+
+  const billingCsv = isOwner
+    ? buildBillingCsv(clientReportRaw, weekStart)
+    : "";
 
   return (
     <ReportsView
@@ -43,6 +54,7 @@ export default async function WorkReportsPage({ searchParams }: ReportsPageProps
       specialistReport={specialistReport}
       billingCsv={billingCsv}
       timeCsv={timeCsv}
+      role={session.profile.role}
     />
   );
 }

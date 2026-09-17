@@ -36,6 +36,7 @@ type MessagesViewProps = {
   currentUserName: string;
   initialThreads: WorkChatThread[];
   teammates: TeammateOption[];
+  initialThreadId?: string;
 };
 
 function initials(name: string) {
@@ -73,11 +74,19 @@ export function MessagesView({
   currentUserName,
   initialThreads,
   teammates,
+  initialThreadId,
 }: MessagesViewProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [threads, setThreads] = useState(initialThreads);
-  const [activeId, setActiveId] = useState(initialThreads[0]?.id ?? "");
+  const [activeId, setActiveId] = useState(
+    () =>
+      (initialThreadId &&
+        initialThreads.some((thread) => thread.id === initialThreadId) &&
+        initialThreadId) ||
+      initialThreads[0]?.id ||
+      "",
+  );
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);

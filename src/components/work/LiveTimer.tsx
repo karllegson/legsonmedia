@@ -5,13 +5,12 @@ import { useEffect, useState } from "react";
 type LiveTimerProps = {
   startedAt: string;
   className?: string;
+  pausedMs?: number;
+  isPaused?: boolean;
 };
 
-function format(startedAt: string, now: number) {
-  const total = Math.max(
-    0,
-    Math.floor((now - new Date(startedAt).getTime()) / 1000),
-  );
+function formatElapsed(totalSeconds: number) {
+  const total = Math.max(0, totalSeconds);
   const pad = (value: number) => String(value).padStart(2, "0");
 
   return [
@@ -21,17 +20,29 @@ function format(startedAt: string, now: number) {
   ].join(":");
 }
 
-export function LiveTimer({ startedAt, className }: LiveTimerProps) {
+export function LiveTimer({
+  startedAt,
+  className,
+  pausedMs = 0,
+  isPaused = false,
+}: LiveTimerProps) {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
+    if (isPaused) {
+      return;
+    }
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [isPaused]);
+
+  const elapsedSeconds = Math.floor(
+    Math.max(0, now - new Date(startedAt).getTime() - pausedMs) / 1000,
+  );
 
   return (
     <span className={className} suppressHydrationWarning>
-      {format(startedAt, now)}
+      {formatElapsed(elapsedSeconds)}
     </span>
   );
 }

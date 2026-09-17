@@ -60,6 +60,22 @@ export function addWeeks(isoDate: string, weeks: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** Monday → Sunday label for a work week, e.g. "Mon Mar 10 – Sun Mar 16". */
+export function formatWorkWeekRange(weekStart: string): string {
+  const monday = new Date(`${weekStart}T12:00:00`);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+
+  const fmt = (date: Date) =>
+    date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+
+  return `${fmt(monday)} – ${fmt(sunday)}`;
+}
+
 export function formatHours(hours: number): string {
   if (Number.isInteger(hours)) {
     return `${hours}h`;

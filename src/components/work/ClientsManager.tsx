@@ -1,14 +1,24 @@
 "use client";
 
-import { AlertCircle, Briefcase, Building2, DollarSign, Plus, X } from "lucide-react";
+import {
+  AlertCircle,
+  Briefcase,
+  Building2,
+  Clock3,
+  DollarSign,
+  Plus,
+  X,
+} from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { saveClientAction } from "@/app/work/(shell)/actions";
-import { formatCurrency, formatHours } from "@/lib/work/roles";
-import type { ClientWithRetainer } from "@/lib/work/types";
+import { formatCurrency, formatHours, isOwnerRole } from "@/lib/work/roles";
+import type { ClientWithRetainer, WorkRole } from "@/lib/work/types";
 
 type ClientsManagerProps = {
   clients: ClientWithRetainer[];
+  role: WorkRole;
 };
 
 function slugify(value: string) {
@@ -19,7 +29,8 @@ function slugify(value: string) {
     .replace(/^-|-$/g, "");
 }
 
-export function ClientsManager({ clients }: ClientsManagerProps) {
+export function ClientsManager({ clients, role }: ClientsManagerProps) {
+  const isOwner = isOwnerRole(role);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState<ClientWithRetainer | null>(null);
@@ -107,15 +118,17 @@ export function ClientsManager({ clients }: ClientsManagerProps) {
           </p>
         </article>
 
-        <article className="wk-stat">
-          <div className="wk-stat-top">
-            <span className="wk-stat-label">Weekly retainer value</span>
-            <span className="wk-stat-icon is-green">
-              <DollarSign size={16} strokeWidth={2} aria-hidden />
-            </span>
-          </div>
-          <p className="wk-stat-value">{formatCurrency(totalWeeklyValue)}</p>
-        </article>
+        {isOwner ? (
+          <article className="wk-stat">
+            <div className="wk-stat-top">
+              <span className="wk-stat-label">Weekly retainer value</span>
+              <span className="wk-stat-icon is-green">
+                <DollarSign size={16} strokeWidth={2} aria-hidden />
+              </span>
+            </div>
+            <p className="wk-stat-value">{formatCurrency(totalWeeklyValue)}</p>
+          </article>
+        ) : null}
       </section>
 
       <div className="wk-row-between">
@@ -143,7 +156,9 @@ export function ClientsManager({ clients }: ClientsManagerProps) {
                 {editing ? `Edit ${editing.name}` : "New client"}
               </h2>
               <p className="wk-card-sub">
-                Setting hours or rate creates a new retainer period from today.
+                {isOwner
+                  ? "Setting hours or rate creates a new retainer period from today."
+                  : "Setting hours creates a new retainer period from today."}
               </p>
             </div>
           </div>
@@ -203,21 +218,23 @@ export function ClientsManager({ clients }: ClientsManagerProps) {
                 />
               </div>
 
-              <div className="wk-field">
-                <label className="wk-label" htmlFor="client-rate">
-                  Hourly rate (USD)
-                </label>
-                <input
-                  className="wk-input"
-                  id="client-rate"
-                  name="hourlyRate"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  defaultValue={editing?.retainer?.hourlyRate ?? ""}
-                  placeholder="30"
-                />
-              </div>
+              {isOwner ? (
+                <div className="wk-field">
+                  <label className="wk-label" htmlFor="client-rate">
+                    Hourly rate (USD)
+                  </label>
+                  <input
+                    className="wk-input"
+                    id="client-rate"
+                    name="hourlyRate"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    defaultValue={editing?.retainer?.hourlyRate ?? ""}
+                    placeholder="30"
+                  />
+                </div>
+              ) : null}
 
               <div className="wk-field wk-form-full">
                 <label className="wk-label" htmlFor="client-notes">
@@ -282,7 +299,14 @@ export function ClientsManager({ clients }: ClientsManagerProps) {
                 </span>
               </div>
 
-              <h3 className="wk-tile-title">{client.name}</h3>
+              <h3 className="wk-tile-title">
+                <Link
+                  href={`/work/clients/${client.slug}`}
+                  className="wk-tile-title-link"
+                >
+                  {client.name}
+                </Link>
+              </h3>
 
               {client.retainer ? (
                 <div className="wk-metrics" style={{ marginTop: 14 }}>
@@ -292,20 +316,25 @@ export function ClientsManager({ clients }: ClientsManagerProps) {
                       {formatHours(client.retainer.hoursPerWeek)}
                     </span>
                   </span>
-                  <span>
-                    <span className="wk-metric-label">Rate</span>
-                    <span className="wk-metric-value">
-                      {formatCurrency(client.retainer.hourlyRate)}
-                    </span>
-                  </span>
-                  <span>
-                    <span className="wk-metric-label">Weekly</span>
-                    <span className="wk-metric-value">
-                      {formatCurrency(
-                        client.retainer.hoursPerWeek * client.retainer.hourlyRate,
-                      )}
-                    </span>
-                  </span>
+                  {isOwner ? (
+                    <>
+                      <span>
+                        <span className="wk-metric-label">Rate</span>
+                        <span className="wk-metric-value">
+                          {formatCurrency(client.retainer.hourlyRate)}
+                        </span>
+                      </span>
+                      <span>
+                        <span className="wk-metric-label">Weekly</span>
+                        <span className="wk-metric-value">
+                          {formatCurrency(
+                            client.retainer.hoursPerWeek *
+                              client.retainer.hourlyRate,
+                          )}
+                        </span>
+                      </span>
+                    </>
+                  ) : null}
                 </div>
               ) : (
                 <p className="wk-muted" style={{ marginTop: 12 }}>
@@ -320,6 +349,13 @@ export function ClientsManager({ clients }: ClientsManagerProps) {
               ) : null}
 
               <div className="wk-row" style={{ marginTop: 16 }}>
+                <Link
+                  href={`/work/clients/${client.slug}`}
+                  className="wk-btn wk-btn-primary"
+                >
+                  <Clock3 size={15} strokeWidth={2} aria-hidden />
+                  Weekly hours
+                </Link>
                 <button
                   type="button"
                   className="wk-btn wk-btn-ghost"

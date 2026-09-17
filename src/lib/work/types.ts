@@ -103,6 +103,7 @@ export type ClientWithRetainer = Client & {
 
 export type ClientUtilization = {
   clientId: string;
+  clientSlug: string;
   clientName: string;
   retainerHours: number;
   hourlyRate: number;
