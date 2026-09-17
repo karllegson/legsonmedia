@@ -27,6 +27,15 @@ function getHomePath(area: RouteArea): string {
   return area === "admin" ? "/admin" : "/work";
 }
 
+function isWorkPublicAuthPath(pathname: string) {
+  return (
+    pathname === "/work/login" ||
+    pathname === "/work/forgot-password" ||
+    pathname === "/work/auth/callback" ||
+    pathname.startsWith("/work/auth/callback/")
+  );
+}
+
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const area = getRouteArea(pathname);
@@ -38,6 +47,9 @@ export async function updateSession(request: NextRequest) {
   const loginPath = getLoginPath(area);
   const homePath = getHomePath(area);
   const isLoginRoute = pathname === loginPath;
+  const isPublicAuthRoute =
+    area === "admin" ? isLoginRoute : isWorkPublicAuthPath(pathname);
+  const isResetPasswordRoute = pathname === "/work/reset-password";
 
   if (isAuthBypassEnabled()) {
     const optedOut = hasDevBypassOptOut(
@@ -45,7 +57,7 @@ export async function updateSession(request: NextRequest) {
     );
 
     if (optedOut) {
-      if (!isLoginRoute) {
+      if (!isPublicAuthRoute && !isResetPasswordRoute) {
         const url = request.nextUrl.clone();
         url.pathname = loginPath;
         return NextResponse.redirect(url);
@@ -64,7 +76,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (!isSupabaseConfigured()) {
-    if (isLoginRoute) {
+    if (isPublicAuthRoute) {
       return NextResponse.next();
     }
 
@@ -98,16 +110,18 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && !isLoginRoute) {
-    const url = request.nextUrl.clone();
-    url.pathname = loginPath;
-    return NextResponse.redirect(url);
-  }
-
-  if (user && isLoginRoute) {
-    const url = request.nextUrl.clone();
-    url.pathname = homePath;
-    return NextResponse.redirect(url);
+  if (!user && !isPublicAuthRoute) {
+    const redirectUrl = request.nextUrl.clone();
+    if (isResetPasswordRoute) {
+      redirectUrl.pathname = "/work/forgot-password";
+      redirectUrl.searchParams.set(
+        "error",
+        "Reset link expired. Request a new one.",
+      );
+    } else {
+      redirectUrl.pathname = loginPath;
+    }
+    return NextResponse.redirect(redirectUrl);
   }
 
   if (user && area === "admin" && !isLoginRoute) {
@@ -121,13 +135,18 @@ export async function updateSession(request: NextRequest) {
     const isActive = profile?.is_active ?? true;
 
     if (!isActive || role !== "owner") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/work";
-      return NextResponse.redirect(url);
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/work";
+      return NextResponse.redirect(redirectUrl);
     }
   }
 
-  if (user && area === "work" && !isLoginRoute) {
+  if (
+    user &&
+    area === "work" &&
+    !isPublicAuthRoute &&
+    !isResetPasswordRoute
+  ) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("is_active")
@@ -135,11 +154,23 @@ export async function updateSession(request: NextRequest) {
       .maybeSingle();
 
     if (profile && profile.is_active === false) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/work/login";
-      url.searchParams.set("error", "Account inactive");
-      return NextResponse.redirect(url);
+      // Sign out so login ↔ /work cannot bounce forever while the session remains.
+      await supabase.auth.signOut();
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/work/login";
+      redirectUrl.searchParams.set("error", "Account inactive");
+      const redirectResponse = NextResponse.redirect(redirectUrl);
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value);
+      });
+      return redirectResponse;
     }
+  }
+
+  if (user && isLoginRoute) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = homePath;
+    return NextResponse.redirect(redirectUrl);
   }
 
   return supabaseResponse;

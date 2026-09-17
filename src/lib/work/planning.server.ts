@@ -334,6 +334,26 @@ export async function updateProfileRole(
     throw new Error("Database not configured");
   }
 
+  if (role !== "owner") {
+    const { data: owners, error: ownersError } = await db
+      .from("profiles")
+      .select("id")
+      .eq("role", "owner")
+      .eq("is_active", true);
+
+    if (ownersError) {
+      throw ownersError;
+    }
+
+    const activeOwners = owners ?? [];
+    const isDemotingLastOwner =
+      activeOwners.length === 1 && activeOwners[0]?.id === userId;
+
+    if (isDemotingLastOwner) {
+      throw new Error("You can’t remove the last owner.");
+    }
+  }
+
   const { error } = await db
     .from("profiles")
     .update({ role, updated_at: new Date().toISOString() })
@@ -341,5 +361,131 @@ export async function updateProfileRole(
 
   if (error) {
     throw error;
+  }
+}
+
+export async function createTeamMember(input: {
+  email: string;
+  password: string;
+  displayName?: string;
+  role: TeamMember["role"];
+}): Promise<{ id: string; email: string }> {
+  const db = createAdminClient();
+  if (!db) {
+    throw new Error("Database not configured");
+  }
+
+  const email = input.email.trim().toLowerCase();
+  const password = input.password;
+  const displayName =
+    input.displayName?.trim() || email.split("@")[0] || "Team member";
+
+  if (!email || !email.includes("@")) {
+    throw new Error("Enter a valid email address");
+  }
+
+  if (password.length < 8) {
+    throw new Error("Password must be at least 8 characters");
+  }
+
+  const { data, error } = await db.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { display_name: displayName },
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const userId = data.user?.id;
+  if (!userId) {
+    throw new Error("Account was not created");
+  }
+
+  // Trigger usually inserts the profile; upsert so role is set immediately.
+  const { error: profileError } = await db.from("profiles").upsert(
+    {
+      id: userId,
+      display_name: displayName,
+      role: input.role,
+      is_active: true,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "id" },
+  );
+
+  if (profileError) {
+    throw new Error(profileError.message);
+  }
+
+  return { id: userId, email };
+}
+
+export async function setTeamMemberPassword(input: {
+  userId: string;
+  password: string;
+}): Promise<void> {
+  const db = createAdminClient();
+  if (!db) {
+    throw new Error("Database not configured");
+  }
+
+  if (input.password.length < 8) {
+    throw new Error("Password must be at least 8 characters");
+  }
+
+  const { error } = await db.auth.admin.updateUserById(input.userId, {
+    password: input.password,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function setPasswordByEmail(input: {
+  email: string;
+  password: string;
+}): Promise<void> {
+  const db = createAdminClient();
+  if (!db) {
+    throw new Error("Database not configured");
+  }
+
+  const email = input.email.trim().toLowerCase();
+  if (!email.endsWith("@legsonmedia.com")) {
+    throw new Error("Use your @legsonmedia.com work email");
+  }
+
+  if (input.password.length < 8) {
+    throw new Error("Password must be at least 8 characters");
+  }
+
+  const { data, error: listError } = await db.auth.admin.listUsers({
+    page: 1,
+    perPage: 200,
+  });
+
+  if (listError) {
+    throw new Error(listError.message);
+  }
+
+  const user = (data.users ?? []).find(
+    (entry) => (entry.email ?? "").toLowerCase() === email,
+  );
+
+  if (!user) {
+    // Avoid email enumeration — same outcome either way for the caller.
+    return;
+  }
+
+  const { error } = await db.auth.admin.updateUserById(user.id, {
+    password: input.password,
+  });
+
+  if (error) {
+    throw new Error(error.message);
   }
 }

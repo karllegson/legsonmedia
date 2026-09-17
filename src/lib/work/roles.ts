@@ -1,4 +1,8 @@
+import { isAuthBypassEnabled } from "@/lib/admin/auth";
 import type { WorkRole } from "./types";
+
+/** Only this account can change team roles in the Work Portal. */
+export const WORK_OWNER_EMAIL = "karl@legsonmedia.com";
 
 export const WORK_ROLES: WorkRole[] = [
   "owner",
@@ -12,6 +16,22 @@ export function isManagerRole(role: WorkRole): boolean {
 
 export function isOwnerRole(role: WorkRole): boolean {
   return role === "owner";
+}
+
+export function canManageWorkRoles(
+  email: string | null | undefined,
+  role: WorkRole,
+): boolean {
+  if (!isOwnerRole(role)) {
+    return false;
+  }
+
+  // Local bypass acts as owner for UI testing.
+  if (isAuthBypassEnabled()) {
+    return true;
+  }
+
+  return (email ?? "").trim().toLowerCase() === WORK_OWNER_EMAIL;
 }
 
 export function formatWorkRole(role: WorkRole): string {

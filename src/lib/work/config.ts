@@ -29,6 +29,12 @@ export const workNavItems: WorkNavItem[] = [
     group: "workspace",
   },
   {
+    href: "/work/messages",
+    label: "Messages",
+    icon: "messages",
+    group: "workspace",
+  },
+  {
     href: "/work/clients",
     label: "Clients",
     icon: "clients",
@@ -69,6 +75,7 @@ export const workPageMeta: Record<string, PageMeta> = {
   "/work": { title: "Dashboard", eyebrow: "Overview" },
   "/work/clock": { title: "Time Clock", eyebrow: "Track your hours" },
   "/work/tasks": { title: "Tasks", eyebrow: "Your work queue" },
+  "/work/messages": { title: "Messages", eyebrow: "Team chat" },
   "/work/clients": { title: "Clients", eyebrow: "Retainers & contracts" },
   "/work/planning": { title: "Weekly Planning", eyebrow: "Allocate retainer hours" },
   "/work/team": { title: "Team", eyebrow: "Roster & live activity" },

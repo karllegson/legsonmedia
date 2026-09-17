@@ -3,10 +3,11 @@
 import { revalidatePath } from "next/cache";
 import {
   assertWorkAuth,
+  requireCmsAdmin,
   requireWorkManager,
 } from "@/lib/work/auth.server";
 import { upsertClient, upsertRetainer } from "@/lib/work/clients.server";
-import { isManagerRole } from "@/lib/work/roles";
+import { isManagerRole, WORK_ROLES, canManageWorkRoles } from "@/lib/work/roles";
 import {
   bulkCreateTasksFromPlan,
   createTask,
@@ -22,7 +23,15 @@ import {
   updateProfileRole,
   upsertAllocation,
   upsertPlanLine,
+  createTeamMember,
+  setTeamMemberPassword,
 } from "@/lib/work/planning.server";
+import {
+  createGroupChat,
+  deleteGroupChat,
+  markThreadRead,
+  sendThreadMessage,
+} from "@/lib/work/messages.server";
 import type { TaskPriority, TaskStatus } from "@/lib/work/types";
 
 export async function clockInAction(formData: FormData) {
@@ -290,26 +299,177 @@ export async function publishPlanAction(formData: FormData) {
 }
 
 export async function updateMemberRoleAction(formData: FormData) {
-  await requireWorkManager();
+  // Role changes are locked to karl@legsonmedia.com (owner).
+  const session = await requireCmsAdmin();
+  if (!canManageWorkRoles(session.email, session.profile.role)) {
+    return { ok: false, error: "Only the owner can change roles." };
+  }
 
   const userId = String(formData.get("userId") ?? "");
-  const role = String(formData.get("role") ?? "") as
-    | "owner"
-    | "operations_manager"
-    | "specialist";
+  const role = String(formData.get("role") ?? "");
 
   if (!userId || !role) {
     return { ok: false, error: "Missing fields" };
   }
 
+  if (!WORK_ROLES.includes(role as (typeof WORK_ROLES)[number])) {
+    return { ok: false, error: "Invalid role" };
+  }
+
   try {
-    await updateProfileRole(userId, role);
+    await updateProfileRole(userId, role as (typeof WORK_ROLES)[number]);
     revalidatePath("/work/team");
     return { ok: true };
   } catch (err) {
     return {
       ok: false,
       error: err instanceof Error ? err.message : "Update failed",
+    };
+  }
+}
+
+export async function createTeamMemberAction(formData: FormData) {
+  const session = await requireCmsAdmin();
+  if (!canManageWorkRoles(session.email, session.profile.role)) {
+    return { ok: false, error: "Only the owner can add team accounts." };
+  }
+
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const displayName = String(formData.get("displayName") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  const role = String(formData.get("role") ?? "specialist");
+
+  if (!email) {
+    return { ok: false, error: "Enter an email address" };
+  }
+
+  if (!WORK_ROLES.includes(role as (typeof WORK_ROLES)[number])) {
+    return { ok: false, error: "Invalid role" };
+  }
+
+  try {
+    await createTeamMember({
+      email,
+      password,
+      displayName: displayName || undefined,
+      role: role as (typeof WORK_ROLES)[number],
+    });
+    revalidatePath("/work/team");
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Could not create account",
+    };
+  }
+}
+
+export async function setMemberPasswordAction(formData: FormData) {
+  const session = await requireCmsAdmin();
+  if (!canManageWorkRoles(session.email, session.profile.role)) {
+    return { ok: false, error: "Only the owner can reset passwords." };
+  }
+
+  const userId = String(formData.get("userId") ?? "");
+  const password = String(formData.get("password") ?? "");
+
+  if (!userId) {
+    return { ok: false, error: "Missing user" };
+  }
+
+  try {
+    await setTeamMemberPassword({ userId, password });
+    revalidatePath("/work/team");
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Could not update password",
+    };
+  }
+}
+
+export async function createGroupChatAction(formData: FormData) {
+  const session = await assertWorkAuth();
+  const title = String(formData.get("title") ?? "").trim();
+  const memberIds = formData
+    .getAll("memberIds")
+    .map((value) => String(value))
+    .filter(Boolean);
+
+  try {
+    const threadId = await createGroupChat({
+      title,
+      createdBy: session.userId,
+      memberIds,
+    });
+    revalidatePath("/work/messages");
+    return { ok: true as const, threadId };
+  } catch (err) {
+    return {
+      ok: false as const,
+      error: err instanceof Error ? err.message : "Could not create group chat",
+    };
+  }
+}
+
+export async function sendMessageAction(formData: FormData) {
+  const session = await assertWorkAuth();
+  const threadId = String(formData.get("threadId") ?? "");
+  const body = String(formData.get("body") ?? "");
+
+  if (!threadId) {
+    return { ok: false, error: "Missing chat" };
+  }
+
+  try {
+    await sendThreadMessage({
+      threadId,
+      senderId: session.userId,
+      body,
+    });
+    revalidatePath("/work/messages");
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Could not send message",
+    };
+  }
+}
+
+export async function markThreadReadAction(threadId: string) {
+  const session = await assertWorkAuth();
+  if (!threadId) {
+    return { ok: false, error: "Missing chat" };
+  }
+
+  try {
+    await markThreadRead({ threadId, userId: session.userId });
+    revalidatePath("/work/messages");
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Could not update chat",
+    };
+  }
+}
+
+export async function deleteGroupChatAction(threadId: string) {
+  const session = await assertWorkAuth();
+  if (!threadId) {
+    return { ok: false, error: "Missing chat" };
+  }
+
+  try {
+    await deleteGroupChat({ threadId, userId: session.userId });
+    revalidatePath("/work/messages");
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Could not delete chat",
     };
   }
 }

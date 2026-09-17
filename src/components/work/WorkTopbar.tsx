@@ -3,6 +3,7 @@
 import { ExternalLink, Timer } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { WorkNotifications } from "@/components/work/WorkNotifications";
 import { workPageMeta } from "@/lib/work/config";
 
 type WorkTopbarProps = {
@@ -42,6 +43,8 @@ export function WorkTopbar({ activeClientName }: WorkTopbarProps) {
             Clock in
           </Link>
         )}
+
+        <WorkNotifications />
 
         <Link
           href="/"

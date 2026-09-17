@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { TeamView } from "@/components/work/TeamView";
 import { getWorkSession, requireWorkManager } from "@/lib/work/auth.server";
-import { isOwnerRole } from "@/lib/work/roles";
+import { canManageWorkRoles } from "@/lib/work/roles";
 import { listTeamMembersWithEmail } from "@/lib/work/planning.server";
 import { listActiveClockIns } from "@/lib/work/time.server";
 
@@ -26,7 +26,7 @@ export default async function WorkTeamPage() {
     <TeamView
       members={members}
       activeClockIns={activeClockIns}
-      canManageRoles={isOwnerRole(session.profile.role)}
+      canManageRoles={canManageWorkRoles(session.email, session.profile.role)}
     />
   );
 }

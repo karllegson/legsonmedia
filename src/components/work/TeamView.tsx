@@ -1,9 +1,23 @@
 "use client";
 
-import { AlertCircle, Radio, Timer, UserCog, Users } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  KeyRound,
+  Plus,
+  Radio,
+  Timer,
+  UserCog,
+  Users,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { updateMemberRoleAction } from "@/app/work/(shell)/actions";
+import {
+  createTeamMemberAction,
+  setMemberPasswordAction,
+  updateMemberRoleAction,
+} from "@/app/work/(shell)/actions";
 import { LiveTimer } from "@/components/work/LiveTimer";
 import { formatWorkRole } from "@/lib/work/roles";
 import type { ActiveClockEntry, TeamMember, WorkRole } from "@/lib/work/types";
@@ -28,6 +42,13 @@ function initials(name: string) {
   return name.slice(0, 2).toUpperCase();
 }
 
+function generateTempPassword() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const bytes = new Uint8Array(12);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
+}
+
 export function TeamView({
   members,
   activeClockIns,
@@ -36,9 +57,15 @@ export function TeamView({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [passwordValue, setPasswordValue] = useState("");
+  const [resetMember, setResetMember] = useState<TeamMember | null>(null);
+  const [resetPasswordValue, setResetPasswordValue] = useState("");
 
   function updateRole(userId: string, role: string) {
     setError(null);
+    setSuccess(null);
     const fd = new FormData();
     fd.set("userId", userId);
     fd.set("role", role);
@@ -53,6 +80,66 @@ export function TeamView({
     });
   }
 
+  function openCreate() {
+    setError(null);
+    setSuccess(null);
+    setPasswordValue(generateTempPassword());
+    setShowCreate(true);
+  }
+
+  function closeCreate() {
+    setShowCreate(false);
+    setPasswordValue("");
+  }
+
+  function handleCreate(formData: FormData) {
+    setError(null);
+    setSuccess(null);
+    startTransition(async () => {
+      const result = await createTeamMemberAction(formData);
+      if (!result.ok) {
+        setError(result.error ?? "Could not create account");
+        return;
+      }
+      const email = String(formData.get("email") ?? "").trim();
+      setSuccess(
+        `Account created for ${email}. Share the temporary password you set — they can change it after signing in.`,
+      );
+      closeCreate();
+      router.refresh();
+    });
+  }
+
+  function openResetPassword(member: TeamMember) {
+    setError(null);
+    setSuccess(null);
+    setResetMember(member);
+    setResetPasswordValue(generateTempPassword());
+  }
+
+  function closeResetPassword() {
+    setResetMember(null);
+    setResetPasswordValue("");
+  }
+
+  function handleResetPassword(formData: FormData) {
+    setError(null);
+    setSuccess(null);
+    startTransition(async () => {
+      const result = await setMemberPasswordAction(formData);
+      if (!result.ok) {
+        setError(result.error ?? "Could not update password");
+        return;
+      }
+      const label =
+        resetMember?.displayName || resetMember?.email || "Teammate";
+      setSuccess(
+        `Password updated for ${label}. Share the new temporary password with them.`,
+      );
+      closeResetPassword();
+    });
+  }
+
   const activeCount = members.filter((m) => m.isActive).length;
 
   return (
@@ -61,6 +148,13 @@ export function TeamView({
         <div className="wk-alert wk-alert-error">
           <AlertCircle size={16} strokeWidth={2} aria-hidden />
           <span>{error}</span>
+        </div>
+      ) : null}
+
+      {success ? (
+        <div className="wk-alert wk-alert-success">
+          <CheckCircle2 size={16} strokeWidth={2} aria-hidden />
+          <span>{success}</span>
         </div>
       ) : null}
 
@@ -166,6 +260,138 @@ export function TeamView({
         )}
       </section>
 
+      {canManageRoles ? (
+        <section className="wk-card">
+          <div className="wk-card-head">
+            <div>
+              <h2 className="wk-card-title">Add team account</h2>
+              <p className="wk-card-sub">
+                Create a Work Portal login without opening Supabase.
+              </p>
+            </div>
+            {!showCreate ? (
+              <button
+                type="button"
+                className="wk-btn wk-btn-primary"
+                onClick={openCreate}
+              >
+                <Plus size={15} strokeWidth={2} aria-hidden />
+                New account
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="wk-btn wk-btn-ghost"
+                onClick={closeCreate}
+                disabled={pending}
+              >
+                <X size={15} strokeWidth={2} aria-hidden />
+                Cancel
+              </button>
+            )}
+          </div>
+
+          {showCreate ? (
+            <form action={handleCreate} className="wk-card-pad">
+              <div className="wk-form-grid">
+                <div className="wk-field">
+                  <label className="wk-label" htmlFor="member-email">
+                    Email
+                  </label>
+                  <input
+                    className="wk-input"
+                    id="member-email"
+                    name="email"
+                    type="email"
+                    autoComplete="off"
+                    placeholder="name@legsonmedia.com"
+                    required
+                    disabled={pending}
+                  />
+                </div>
+
+                <div className="wk-field">
+                  <label className="wk-label" htmlFor="member-name">
+                    Display name{" "}
+                    <span className="wk-label-hint">(optional)</span>
+                  </label>
+                  <input
+                    className="wk-input"
+                    id="member-name"
+                    name="displayName"
+                    type="text"
+                    autoComplete="off"
+                    placeholder="Jordan"
+                    disabled={pending}
+                  />
+                </div>
+
+                <div className="wk-field">
+                  <label className="wk-label" htmlFor="member-role">
+                    Role
+                  </label>
+                  <select
+                    className="wk-select"
+                    id="member-role"
+                    name="role"
+                    defaultValue="specialist"
+                    disabled={pending}
+                  >
+                    <option value="specialist">Specialist</option>
+                    <option value="operations_manager">
+                      Operations Manager
+                    </option>
+                    <option value="owner">Owner</option>
+                  </select>
+                </div>
+
+                <div className="wk-field">
+                  <label className="wk-label" htmlFor="member-password">
+                    Temporary password
+                  </label>
+                  <div className="wk-row" style={{ gap: 8 }}>
+                    <input
+                      className="wk-input"
+                      id="member-password"
+                      name="password"
+                      type="text"
+                      autoComplete="new-password"
+                      value={passwordValue}
+                      onChange={(event) => setPasswordValue(event.target.value)}
+                      minLength={8}
+                      required
+                      disabled={pending}
+                    />
+                    <button
+                      type="button"
+                      className="wk-btn wk-btn-ghost"
+                      onClick={() => setPasswordValue(generateTempPassword())}
+                      disabled={pending}
+                    >
+                      Regenerate
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="wk-form-actions">
+                <button
+                  type="submit"
+                  className="wk-btn wk-btn-primary"
+                  disabled={pending}
+                >
+                  {pending ? "Creating…" : "Create account"}
+                </button>
+                <p className="wk-note" style={{ margin: 0 }}>
+                  Share the email + temporary password with them. No Supabase
+                  email is sent.
+                </p>
+              </div>
+            </form>
+          ) : null}
+        </section>
+      ) : null}
+
       <section className="wk-card">
         <div className="wk-card-head">
           <div>
@@ -175,8 +401,8 @@ export function TeamView({
             </h2>
             <p className="wk-card-sub">
               {canManageRoles
-                ? "Change a role to grant or remove operations access."
-                : "Only the owner can change roles."}
+                ? "You’re the owner — change a role to grant or remove access."
+                : "Only the owner (karl@legsonmedia.com) can change roles."}
             </p>
           </div>
         </div>
@@ -188,8 +414,9 @@ export function TeamView({
             </span>
             <p className="wk-empty-title">No team members yet</p>
             <p className="wk-empty-text">
-              Create accounts in Supabase Auth. They appear here after first
-              sign-in.
+              {canManageRoles
+                ? "Use Add team account above to create the first login."
+                : "Ask the owner to create accounts from this page."}
             </p>
           </div>
         ) : (
@@ -201,6 +428,7 @@ export function TeamView({
                   <th>Email</th>
                   <th>Role</th>
                   <th>Status</th>
+                  {canManageRoles ? <th>Password</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -254,6 +482,19 @@ export function TeamView({
                           {member.isActive ? "Active" : "Inactive"}
                         </span>
                       </td>
+                      {canManageRoles ? (
+                        <td>
+                          <button
+                            type="button"
+                            className="wk-btn wk-btn-ghost"
+                            onClick={() => openResetPassword(member)}
+                            disabled={pending}
+                          >
+                            <KeyRound size={14} strokeWidth={2} aria-hidden />
+                            Set password
+                          </button>
+                        </td>
+                      ) : null}
                     </tr>
                   );
                 })}
@@ -263,10 +504,81 @@ export function TeamView({
         )}
 
         <p className="wk-note">
-          New team members are created in Supabase Auth. Set their role here after
-          their first sign-in.
+          {canManageRoles
+            ? "New accounts can sign in at /work/login with the email and temporary password you set. Use Set password anytime — no email required."
+            : "Ask the owner if you need a new login created."}
         </p>
       </section>
+
+      {canManageRoles && resetMember ? (
+        <section className="wk-card">
+          <div className="wk-card-head">
+            <div>
+              <h2 className="wk-card-title">Set password</h2>
+              <p className="wk-card-sub">
+                Update login for{" "}
+                {resetMember.displayName || resetMember.email || "teammate"} —
+                no reset email is sent.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="wk-btn wk-btn-ghost"
+              onClick={closeResetPassword}
+              disabled={pending}
+            >
+              <X size={15} strokeWidth={2} aria-hidden />
+              Cancel
+            </button>
+          </div>
+
+          <form action={handleResetPassword} className="wk-card-pad">
+            <input type="hidden" name="userId" value={resetMember.id} />
+            <div className="wk-form-grid">
+              <div className="wk-field wk-form-full">
+                <label className="wk-label" htmlFor="reset-password">
+                  New temporary password
+                </label>
+                <div className="wk-row" style={{ gap: 8 }}>
+                  <input
+                    className="wk-input"
+                    id="reset-password"
+                    name="password"
+                    type="text"
+                    autoComplete="new-password"
+                    value={resetPasswordValue}
+                    onChange={(event) =>
+                      setResetPasswordValue(event.target.value)
+                    }
+                    minLength={8}
+                    required
+                    disabled={pending}
+                  />
+                  <button
+                    type="button"
+                    className="wk-btn wk-btn-ghost"
+                    onClick={() =>
+                      setResetPasswordValue(generateTempPassword())
+                    }
+                    disabled={pending}
+                  >
+                    Regenerate
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="wk-form-actions">
+              <button
+                type="submit"
+                className="wk-btn wk-btn-primary"
+                disabled={pending || resetPasswordValue.length < 8}
+              >
+                {pending ? "Saving…" : "Save password"}
+              </button>
+            </div>
+          </form>
+        </section>
+      ) : null}
     </div>
   );
 }

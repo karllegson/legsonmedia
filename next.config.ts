@@ -1,9 +1,16 @@
 import type { NextConfig } from "next";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { getSupabaseStorageHostname } from "./src/lib/supabase/storage";
 
 const supabaseHostname = getSupabaseStorageHostname();
+const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
+  // Pin root so Turbopack does not lose `next` (avoids HMR panic refresh loops).
+  turbopack: {
+    root: projectRoot,
+  },
   experimental: {
     optimizePackageImports: [
       "lucide-react",
